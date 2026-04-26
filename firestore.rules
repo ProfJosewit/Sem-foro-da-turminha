@@ -1,0 +1,43 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Students Collection
+    match /students/{studentId} {
+      function isValidStudent(data) {
+        return data.keys().hasAll(['id', 'name', 'classId', 'status', 'carColor']) &&
+               data.keys().size() == 5 &&
+               data.id is string && data.id.size() <= 128 &&
+               data.name is string && data.name.size() <= 100 &&
+               data.classId is string && data.classId.size() <= 128 &&
+               data.status in ['green', 'yellow', 'red', 'excellence', 'helper'] &&
+               data.carColor is string && data.carColor.size() <= 20;
+      }
+
+      allow read: if true;
+      allow create: if isValidStudent(request.resource.data);
+      allow update, delete: if true;
+    }
+
+    // Classes Collection
+    match /classes/{classId} {
+      function isValidClass(data) {
+        return data.keys().hasAll(['id', 'name']) &&
+               data.keys().size() == 2 &&
+               data.id is string && data.id.size() <= 128 &&
+               data.name is string && data.name.size() <= 50;
+      }
+
+      allow read: if true;
+      allow create: if isValidClass(request.resource.data);
+      allow update, delete: if true;
+    }
+  }
+}

@@ -18,10 +18,58 @@ import {
   Check,
   X,
   Upload,
-  UserPlus
+  UserPlus,
+  LogIn
 } from 'lucide-react';
+import { 
+  collection, 
+  onSnapshot, 
+  doc, 
+  setDoc, 
+  updateDoc, 
+  deleteDoc, 
+  writeBatch 
+} from 'firebase/firestore';
+import { db, auth } from './firebase';
 
 // --- Types ---
+
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string | null;
+    email?: string | null;
+    emailVerified?: boolean | null;
+    isAnonymous?: boolean | null;
+  }
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+      isAnonymous: auth.currentUser?.isAnonymous,
+    },
+    operationType,
+    path
+  }
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
 
 type BehaviorStatus = 'green' | 'yellow' | 'red' | 'excellence' | 'helper';
 
@@ -147,25 +195,9 @@ const StudentCar = ({
 };
 
 export default function App() {
-  const [students, setStudents] = useState<Student[]>(() => {
-    const saved = localStorage.getItem('semaforo_v3_students');
-    return saved ? JSON.parse(saved) : [];
-  });
-  
-  const [classes, setClasses] = useState<ClassGroup[]>(() => {
-    const saved = localStorage.getItem('semaforo_v3_classes');
-    return saved ? JSON.parse(saved) : [
-      { id: '1', name: '1ºA' },
-      { id: '2', name: '1ºB' },
-      { id: '3', name: '2ºA' },
-      { id: '4', name: '2ºB' },
-      { id: '5', name: '2ºC' },
-      { id: '6', name: '3ºA' },
-      { id: '7', name: '3ºB' },
-      { id: '8', name: '3ºC' }
-    ];
-  });
-
+  const [loading, setLoading] = useState(true);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [classes, setClasses] = useState<ClassGroup[]>([]);
   const [selectedClassId, setSelectedClassId] = useState<string>('all');
   const [showClassesModal, setShowClassesModal] = useState(false);
   const [showBulkAdd, setShowBulkAdd] = useState(false);
@@ -175,86 +207,151 @@ export default function App() {
   const [bulkClassName, setBulkClassName] = useState('');
   const [showAlert, setShowAlert] = useState<{name: string} | null>(null);
 
+  // Firestore Sync
   useEffect(() => {
-    localStorage.setItem('semaforo_v3_students', JSON.stringify(students));
-    localStorage.setItem('semaforo_v3_classes', JSON.stringify(classes));
-  }, [students, classes]);
+    const unsubClasses = onSnapshot(collection(db, 'classes'), (snapshot) => {
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ClassGroup));
+      setClasses(data);
+      setLoading(false);
+    }, (err) => {
+      handleFirestoreError(err, OperationType.LIST, 'classes');
+      setLoading(false);
+    });
 
-  const addStudent = (e: React.FormEvent) => {
+    const unsubStudents = onSnapshot(collection(db, 'students'), (snapshot) => {
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
+      setStudents(data);
+    }, (err) => handleFirestoreError(err, OperationType.LIST, 'students'));
+
+    return () => {
+      unsubClasses();
+      unsubStudents();
+    };
+  }, []);
+
+  const addStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName.trim() || selectedClassId === 'all') return;
+    
+    const id = crypto.randomUUID();
     const newStudent: Student = {
-      id: crypto.randomUUID(),
+      id,
       name: newName,
       classId: selectedClassId,
       status: 'green',
       carColor: newColor
     };
-    setStudents([...students, newStudent]);
-    setNewName('');
+    
+    try {
+      await setDoc(doc(db, 'students', id), newStudent);
+      setNewName('');
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, `students/${id}`);
+    }
   };
 
-  const handleBulkAdd = () => {
+  const handleBulkAdd = async () => {
     if (!bulkText.trim() || !bulkClassName.trim()) return;
     
-    // Find or Create Class
-    let targetClassId = '';
-    const existingClass = classes.find(c => c.name.toLowerCase() === bulkClassName.trim().toLowerCase());
-    
-    if (existingClass) {
-      targetClassId = existingClass.id;
-    } else {
-      const newClass: ClassGroup = { id: crypto.randomUUID(), name: bulkClassName.trim() };
-      setClasses(prev => [...prev, newClass]);
-      targetClassId = newClass.id;
-    }
+    try {
+      const batch = writeBatch(db);
+      let targetClassId = '';
+      const existingClass = classes.find(c => c.name.toLowerCase() === bulkClassName.trim().toLowerCase());
+      
+      if (existingClass) {
+        targetClassId = existingClass.id;
+      } else {
+        targetClassId = crypto.randomUUID();
+        const newClass = { id: targetClassId, name: bulkClassName.trim() };
+        batch.set(doc(db, 'classes', targetClassId), newClass);
+      }
 
-    const names = bulkText.split(/[\n,]/).map(n => n.trim()).filter(n => n.length > 0);
-    const newOnes = names.map(name => ({
-      id: crypto.randomUUID(),
-      name,
-      classId: targetClassId,
-      status: 'green' as BehaviorStatus,
-      carColor: CAR_COLORS[Math.floor(Math.random() * CAR_COLORS.length)].value
-    }));
-    
-    setStudents(prev => [...prev, ...newOnes]);
-    setSelectedClassId(targetClassId);
-    setBulkText('');
-    setBulkClassName('');
-    setShowBulkAdd(false);
+      const names = bulkText.split(/[\n,]/).map(n => n.trim()).filter(n => n.length > 0);
+      names.forEach(name => {
+        const studentId = crypto.randomUUID();
+        batch.set(doc(db, 'students', studentId), {
+          id: studentId,
+          name,
+          classId: targetClassId,
+          status: 'green',
+          carColor: CAR_COLORS[Math.floor(Math.random() * CAR_COLORS.length)].value
+        });
+      });
+      
+      await batch.commit();
+      setSelectedClassId(targetClassId);
+      setBulkText('');
+      setBulkClassName('');
+      setShowBulkAdd(false);
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, 'batch-bulk-add');
+    }
   };
 
-  const updateStatus = (id: string, status: BehaviorStatus) => {
+  const updateStatus = async (id: string, status: BehaviorStatus) => {
     const student = students.find(s => s.id === id);
-    if (status === 'red' && student) setShowAlert({ name: student.name });
-    setStudents(prev => prev.map(s => s.id === id ? { ...s, status } : s));
-  };
+    if (!student) return;
 
-  const deleteStudent = (id: string) => {
-    setStudents(prev => prev.filter(s => s.id !== id));
-  };
+    if (status === 'red') setShowAlert({ name: student.name });
 
-  const resetAll = () => {
-    if (confirm('Deseja mover todos os carros desta turma de volta para o sinal Verde?')) {
-      setStudents(prev => prev.map(s => 
-        (selectedClassId === 'all' || s.classId === selectedClassId) 
-          ? { ...s, status: 'green' } 
-          : s
-      ));
+    try {
+      await updateDoc(doc(db, 'students', id), { status });
+    } catch (err) {
+      handleFirestoreError(err, OperationType.UPDATE, `students/${id}`);
     }
   };
 
-  const addClass = (name: string) => {
-    if (!name.trim()) return;
-    setClasses([...classes, { id: crypto.randomUUID(), name: name.trim() }]);
+  const deleteStudent = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'students', id));
+    } catch (err) {
+      handleFirestoreError(err, OperationType.DELETE, `students/${id}`);
+    }
   };
 
-  const deleteClass = (id: string) => {
-    if (confirm('Isso apagará a turma e todos os alunos dela. Confirmar?')) {
-      setClasses(prev => prev.filter(c => c.id !== id));
-      setStudents(prev => prev.filter(s => s.classId !== id));
+  const resetAll = async () => {
+    if (!confirm('Deseja mover todos os carros desta turma de volta para o sinal Verde?')) return;
+    
+    try {
+      const batch = writeBatch(db);
+      const toReset = currentStudents.filter(s => s.status !== 'green');
+      
+      toReset.forEach(s => {
+        batch.update(doc(db, 'students', s.id), { status: 'green' });
+      });
+      
+      await batch.commit();
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, 'batch-reset');
+    }
+  };
+
+  const addClass = async (name: string) => {
+    if (!name.trim()) return;
+    const id = crypto.randomUUID();
+    try {
+      await setDoc(doc(db, 'classes', id), { id, name: name.trim() });
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, `classes/${id}`);
+    }
+  };
+
+  const deleteClass = async (id: string) => {
+    if (!confirm('Isso apagará a turma e todos os alunos dela. Confirmar?')) return;
+    
+    try {
+      const batch = writeBatch(db);
+      const studentsToDelete = students.filter(s => s.classId === id);
+      
+      studentsToDelete.forEach(s => {
+        batch.delete(doc(db, 'students', s.id));
+      });
+      batch.delete(doc(db, 'classes', id));
+      
+      await batch.commit();
       if (selectedClassId === id) setSelectedClassId('all');
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, 'batch-delete-class');
     }
   };
 
@@ -269,6 +366,17 @@ export default function App() {
     excellence: currentStudents.filter(s => s.status === 'excellence'),
     helper: currentStudents.filter(s => s.status === 'helper'),
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-sky-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Car size={64} className="text-sky-500 animate-bounce" />
+          <p className="text-sky-600 font-black uppercase italic tracking-widest">Aquecendo Motores...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-sky-50 font-sans text-gray-900 pb-20">

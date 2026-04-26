@@ -1,0 +1,40 @@
+{
+  "entities": {
+    "Student": {
+      "title": "Student",
+      "description": "A student in a specific class with a behavior status and car color.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "classId": { "type": "string" },
+        "status": { 
+          "type": "string",
+          "enum": ["green", "yellow", "red", "excellence", "helper"]
+        },
+        "carColor": { "type": "string" }
+      },
+      "required": ["id", "name", "classId", "status", "carColor"]
+    },
+    "ClassGroup": {
+      "title": "ClassGroup",
+      "description": "A group of students (e.g., 1ºA).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" }
+      },
+      "required": ["id", "name"]
+    }
+  },
+  "firestore": {
+    "students/{studentId}": {
+      "schema": "Student",
+      "description": "Collection of all students."
+    },
+    "classes/{classId}": {
+      "schema": "ClassGroup",
+      "description": "Collection of all classes."
+    }
+  }
+}
