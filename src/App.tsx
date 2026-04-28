@@ -213,6 +213,7 @@ export default function App() {
   const [isSaving, setIsSaving] = useState(false);
   const [showClassesModal, setShowClassesModal] = useState(false);
   const [showBulkAdd, setShowBulkAdd] = useState(false);
+  const [bulkAddSuccess, setBulkAddSuccess] = useState(false);
   const [newName, setNewName] = useState('');
   const [newColor, setNewColor] = useState(CAR_COLORS[3].value);
   const [bulkText, setBulkText] = useState('');
@@ -316,10 +317,18 @@ export default function App() {
       });
       
       await batch.commit();
+      
+      // Success feedback
       setSelectedClassId(targetClassId);
       setBulkText('');
       setBulkClassName('');
-      setShowBulkAdd(false);
+      setBulkAddSuccess(true);
+      
+      // Wait for the UI to feel "confirmed"
+      setTimeout(() => {
+        setBulkAddSuccess(false);
+        setShowBulkAdd(false);
+      }, 1500);
     } catch (err) {
       handleFirestoreError(err, OperationType.WRITE, 'batch-bulk-add');
     } finally {
@@ -759,8 +768,20 @@ export default function App() {
               <h2 className="text-2xl font-black text-indigo-900 uppercase italic mb-2">Importar Turma Inteira</h2>
               <p className="text-gray-500 text-[10px] font-bold mb-8 uppercase tracking-widest">Adicione os nomes (um por linha) e escolha a turma.</p>
               
-              <div className="space-y-6">
-                <div className="space-y-2">
+              {bulkAddSuccess ? (
+                <motion.div 
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="flex flex-col items-center justify-center py-20 gap-4"
+                >
+                  <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-xl">
+                    <Check size={48} strokeWidth={4} />
+                  </div>
+                  <p className="text-emerald-600 font-black uppercase italic tracking-widest text-xl">Pilotos na Pista!</p>
+                </motion.div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="space-y-2">
                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">Nome da Turma:</label>
                   <input 
                     type="text"
@@ -786,14 +807,27 @@ export default function App() {
                   <button onClick={() => setShowBulkAdd(false)} className="flex-1 bg-gray-100 text-gray-500 py-4 rounded-2xl font-black uppercase tracking-[0.2em] hover:bg-gray-200 transition-all italic">Cancelar</button>
                   <button 
                     onClick={handleBulkAdd}
-                    disabled={!bulkText.trim() || !bulkClassName.trim()}
-                    className="flex-1 bg-indigo-600 text-white py-4 rounded-2xl font-black uppercase tracking-[0.2em] shadow-xl hover:bg-indigo-700 transition-all disabled:opacity-50 italic"
+                    disabled={!bulkText.trim() || !bulkClassName.trim() || isSaving}
+                    className="flex-1 bg-indigo-600 text-white py-4 rounded-2xl font-black uppercase tracking-[0.2em] shadow-xl hover:bg-indigo-700 transition-all disabled:opacity-50 italic flex items-center justify-center gap-2"
                   >
-                    LARGADA! 🏁
+                    {isSaving ? (
+                      <>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        >
+                          <Settings size={20} />
+                        </motion.div>
+                        PROCESSANDO...
+                      </>
+                    ) : (
+                      'LARGADA! 🏁'
+                    )}
                   </button>
                 </div>
               </div>
-            </motion.div>
+            )}
+          </motion.div>
           </div>
         )}
       </AnimatePresence>
