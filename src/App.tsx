@@ -32,7 +32,15 @@ import {
 } from 'firebase/firestore';
 import { db, auth } from './firebase';
 
-// --- Types ---
+// --- Helpers ---
+
+const generateId = () => {
+  try {
+    return crypto.randomUUID();
+  } catch (e) {
+    return Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
+  }
+};
 
 enum OperationType {
   CREATE = 'create',
@@ -142,7 +150,8 @@ const StudentCar = ({
   };
 
   const getBgColor = () => {
-    if (student.status === 'excellence' || student.status === 'helper') return 'bg-white/10';
+    if (student.status === 'excellence') return 'bg-indigo-900/50';
+    if (student.status === 'helper') return 'bg-purple-900/50';
     return isSelected ? 'bg-sky-50' : 'bg-white';
   };
 
@@ -198,7 +207,10 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<ClassGroup[]>([]);
-  const [selectedClassId, setSelectedClassId] = useState<string>('all');
+  const [selectedClassId, setSelectedClassId] = useState<string>(() => {
+    return localStorage.getItem('semaforo_selected_class') || 'all';
+  });
+  const [isSaving, setIsSaving] = useState(false);
   const [showClassesModal, setShowClassesModal] = useState(false);
   const [showBulkAdd, setShowBulkAdd] = useState(false);
   const [newName, setNewName] = useState('');
@@ -209,19 +221,40 @@ export default function App() {
 
   // Firestore Sync
   useEffect(() => {
+    localStorage.setItem('semaforo_selected_class', selectedClassId);
+  }, [selectedClassId]);
+
+  useEffect(() => {
+    let classesDone = false;
+    let studentsDone = false;
+
+    const checkDone = () => {
+      if (classesDone && studentsDone) {
+        setLoading(false);
+      }
+    };
+
     const unsubClasses = onSnapshot(collection(db, 'classes'), (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ClassGroup));
       setClasses(data);
-      setLoading(false);
+      classesDone = true;
+      checkDone();
     }, (err) => {
       handleFirestoreError(err, OperationType.LIST, 'classes');
-      setLoading(false);
+      classesDone = true;
+      checkDone();
     });
 
     const unsubStudents = onSnapshot(collection(db, 'students'), (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
       setStudents(data);
-    }, (err) => handleFirestoreError(err, OperationType.LIST, 'students'));
+      studentsDone = true;
+      checkDone();
+    }, (err) => {
+      handleFirestoreError(err, OperationType.LIST, 'students');
+      studentsDone = true;
+      checkDone();
+    });
 
     return () => {
       unsubClasses();
@@ -233,7 +266,8 @@ export default function App() {
     e.preventDefault();
     if (!newName.trim() || selectedClassId === 'all') return;
     
-    const id = crypto.randomUUID();
+    setIsSaving(true);
+    const id = generateId();
     const newStudent: Student = {
       id,
       name: newName,
@@ -247,12 +281,15 @@ export default function App() {
       setNewName('');
     } catch (err) {
       handleFirestoreError(err, OperationType.WRITE, `students/${id}`);
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleBulkAdd = async () => {
     if (!bulkText.trim() || !bulkClassName.trim()) return;
     
+    setIsSaving(true);
     try {
       const batch = writeBatch(db);
       let targetClassId = '';
@@ -261,14 +298,14 @@ export default function App() {
       if (existingClass) {
         targetClassId = existingClass.id;
       } else {
-        targetClassId = crypto.randomUUID();
+        targetClassId = generateId();
         const newClass = { id: targetClassId, name: bulkClassName.trim() };
         batch.set(doc(db, 'classes', targetClassId), newClass);
       }
 
       const names = bulkText.split(/[\n,]/).map(n => n.trim()).filter(n => n.length > 0);
       names.forEach(name => {
-        const studentId = crypto.randomUUID();
+        const studentId = generateId();
         batch.set(doc(db, 'students', studentId), {
           id: studentId,
           name,
@@ -285,6 +322,8 @@ export default function App() {
       setShowBulkAdd(false);
     } catch (err) {
       handleFirestoreError(err, OperationType.WRITE, 'batch-bulk-add');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -295,23 +334,30 @@ export default function App() {
     if (status === 'red') setShowAlert({ name: student.name });
 
     try {
+      setIsSaving(true);
       await updateDoc(doc(db, 'students', id), { status });
     } catch (err) {
       handleFirestoreError(err, OperationType.UPDATE, `students/${id}`);
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const deleteStudent = async (id: string) => {
     try {
+      setIsSaving(true);
       await deleteDoc(doc(db, 'students', id));
     } catch (err) {
       handleFirestoreError(err, OperationType.DELETE, `students/${id}`);
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const resetAll = async () => {
     if (!confirm('Deseja mover todos os carros desta turma de volta para o sinal Verde?')) return;
     
+    setIsSaving(true);
     try {
       const batch = writeBatch(db);
       const toReset = currentStudents.filter(s => s.status !== 'green');
@@ -323,22 +369,28 @@ export default function App() {
       await batch.commit();
     } catch (err) {
       handleFirestoreError(err, OperationType.WRITE, 'batch-reset');
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const addClass = async (name: string) => {
     if (!name.trim()) return;
-    const id = crypto.randomUUID();
+    setIsSaving(true);
+    const id = generateId();
     try {
       await setDoc(doc(db, 'classes', id), { id, name: name.trim() });
     } catch (err) {
       handleFirestoreError(err, OperationType.WRITE, `classes/${id}`);
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const deleteClass = async (id: string) => {
     if (!confirm('Isso apagará a turma e todos os alunos dela. Confirmar?')) return;
     
+    setIsSaving(true);
     try {
       const batch = writeBatch(db);
       const studentsToDelete = students.filter(s => s.classId === id);
@@ -352,6 +404,8 @@ export default function App() {
       if (selectedClassId === id) setSelectedClassId('all');
     } catch (err) {
       handleFirestoreError(err, OperationType.WRITE, 'batch-delete-class');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -369,11 +423,63 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-sky-50 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Car size={64} className="text-sky-500 animate-bounce" />
-          <p className="text-sky-600 font-black uppercase italic tracking-widest">Aquecendo Motores...</p>
-        </div>
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-8 overflow-hidden">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="relative w-full max-w-md h-48 flex flex-col justify-center items-center gap-6"
+        >
+          {/* Race Track Lines */}
+          <div className="absolute inset-0 flex flex-col justify-around opacity-10">
+            <div className="h-0.5 w-[200%] bg-white border-t-2 border-dashed border-white animate-[move-track_2s_linear_infinite]" />
+            <div className="h-0.5 w-[200%] bg-white border-t-2 border-dashed border-white animate-[move-track_2s_linear_infinite_reverse]" />
+          </div>
+
+          <div className="flex gap-4 items-end mb-4">
+            {[
+              { color: "#ef4444", delay: 0 },
+              { color: "#10b981", delay: 0.2 },
+              { color: "#3b82f6", delay: 0.4 },
+              { color: "#f59e0b", delay: 0.1 }
+            ].map((config, i) => (
+              <motion.div
+                key={i}
+                animate={{ 
+                  x: [-20, 20, -20],
+                  y: [0, -10, 0],
+                  rotate: [0, 5, -5, 0]
+                }}
+                transition={{ 
+                  duration: 0.6, 
+                  repeat: Infinity, 
+                  delay: config.delay,
+                  ease: "easeInOut"
+                }}
+                style={{ color: config.color }}
+              >
+                <Car size={48} fill={config.color} fillOpacity={0.2} strokeWidth={3} />
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="text-center z-10">
+            <motion.p 
+              animate={{ opacity: [0.4, 1, 0.4] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+              className="text-sky-400 font-black text-2xl uppercase italic tracking-[0.3em]"
+            >
+              Aquecendo Motores...
+            </motion.p>
+            <p className="text-slate-500 font-bold text-[10px] uppercase tracking-widest mt-2">Sincronizando com o Grid de Largada</p>
+          </div>
+        </motion.div>
+
+        <style>{`
+          @keyframes move-track {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+        `}</style>
       </div>
     );
   }
@@ -403,6 +509,15 @@ export default function App() {
               >
                 <Settings size={18} />
               </button>
+              {isSaving && (
+                <motion.span 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-[8px] font-black text-emerald-500 uppercase tracking-widest animate-pulse"
+                >
+                  Salvando...
+                </motion.span>
+              )}
             </div>
           </div>
           
@@ -718,7 +833,11 @@ export default function App() {
 
       {/* Helper Legend */}
       <footer className="mt-8 mb-4 max-w-7xl mx-auto px-8 flex flex-wrap justify-between items-center text-sky-600/60 font-black text-[10px] uppercase tracking-[0.2em] gap-4">
-        <span>🏁 Pilotando com Respeito e Atenção</span>
+        <div className="flex items-center gap-2">
+          <span>🏁 Pilotando com Respeito e Atenção</span>
+          <span className="w-1 h-1 rounded-full bg-emerald-400"></span>
+          <span className="text-[8px]">Nuvem Sincronizada</span>
+        </div>
         <div className="flex gap-4">
           <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm"></span> Bom Trabalho</span>
           <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-sm"></span> Atenção</span>
