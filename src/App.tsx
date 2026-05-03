@@ -344,7 +344,6 @@ export default function App() {
   const [isSaving, setIsSaving] = useState(false);
   const [showClassesModal, setShowClassesModal] = useState(false);
   const [showBulkAdd, setShowBulkAdd] = useState(false);
-  const [showHelpersArea, setShowHelpersArea] = useState(false);
   const [bulkAddSuccess, setBulkAddSuccess] = useState(false);
   const [newName, setNewName] = useState('');
   const [newColor, setNewColor] = useState(CAR_COLORS[3].value);
@@ -846,13 +845,6 @@ export default function App() {
             </div>
 
             <button 
-              onClick={() => setShowHelpersArea(true)}
-              className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl text-sm font-black flex items-center gap-2 shadow-md transition-all active:scale-95 border-b-4 border-purple-700"
-            >
-              <HandHelping size={18} /> Área dos Ajudantes
-            </button>
-
-            <button 
               onClick={() => setShowBulkAdd(true)}
               className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-black flex items-center gap-2 shadow-md transition-all active:scale-95 border-b-4 border-indigo-700"
             >
@@ -929,7 +921,77 @@ export default function App() {
           )}
 
           {/* BEHAVIOR ZONES */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            {/* HELPERS ZONE (MAIN GRID) */}
+            <div className="bg-purple-100 rounded-[40px] p-6 flex flex-col border-4 border-purple-300 shadow-inner min-h-[550px] xl:col-span-2">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-purple-600 rounded-full border-4 border-white shadow-md flex items-center justify-center text-white text-xl">🤝</div>
+                  <h2 className="font-black text-purple-700 text-xl uppercase italic tracking-tight">Grid de Ajudantes</h2>
+                </div>
+                <span className="bg-purple-200 text-purple-700 text-[10px] font-black px-3 py-1 rounded-full uppercase italic">Ordem de Largada</span>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar min-h-[400px]">
+                {selectedClassId === 'all' ? (
+                  <div className="flex flex-col gap-8">
+                    {classes.map(cls => {
+                      const classHelpers = grouped.helper.filter(h => h.classId === cls.id);
+                      if (classHelpers.length === 0) return null;
+                      return (
+                        <div key={cls.id} className="w-full flex flex-col gap-4 items-center">
+                          <div className="w-full h-px bg-purple-200 my-2 flex items-center justify-center">
+                            <span className="bg-purple-100 px-3 text-[10px] font-black text-purple-400 uppercase tracking-widest italic">{cls.name}</span>
+                          </div>
+                          <Reorder.Group axis="y" values={classHelpers} onReorder={handleReorder} className="flex flex-col gap-6 w-full items-center">
+                            {classHelpers.map(s => (
+                              <Reorder.Item key={s.id} value={s} className="w-fit">
+                                <StudentCar 
+                                  student={s} 
+                                  onStatusChange={updateStatus} 
+                                  onDelete={deleteStudent} 
+                                  isSaving={isSaving}
+                                  isSelected 
+                                />
+                              </Reorder.Item>
+                            ))}
+                          </Reorder.Group>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <Reorder.Group axis="y" values={grouped.helper} onReorder={handleReorder} className="flex flex-col gap-6 w-full items-center py-4">
+                    {grouped.helper.map(s => (
+                      <Reorder.Item key={s.id} value={s} className="w-fit">
+                        <StudentCar 
+                          student={s} 
+                          onStatusChange={updateStatus} 
+                          onDelete={deleteStudent} 
+                          isSaving={isSaving}
+                          isSelected 
+                        />
+                      </Reorder.Item>
+                    ))}
+                  </Reorder.Group>
+                )}
+                
+                <AnimatePresence>
+                  {grouped.helper.length === 0 && (
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 0.6 }}
+                      className="flex flex-col items-center justify-center h-64 grayscale opacity-40"
+                    >
+                      <HandHelping size={64} className="text-purple-400 mb-4" />
+                      <p className="text-purple-800 font-black uppercase text-sm italic">Nenhum ajudante escalado</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+              <p className="mt-4 text-[10px] text-purple-600 font-black uppercase text-center py-2 bg-purple-50 rounded-full border border-purple-200">Arraste para mudar a ordem ✋</p>
+            </div>
+
             {/* GREEN ZONE */}
             <div className="bg-emerald-100 rounded-[40px] p-6 flex flex-col border-4 border-emerald-300 shadow-inner min-h-[450px]">
               <div className="flex items-center gap-3 mb-6">
@@ -1000,106 +1062,36 @@ export default function App() {
           </div>
         </div>
 
-        {/* VIP PARKING AREA */}
-        <div className="lg:col-span-4 bg-slate-900 rounded-[3rem] p-8 flex flex-col border-[12px] border-slate-800 shadow-2xl sticky lg:top-24 max-h-[calc(100vh-140px)] overflow-hidden">
+        {/* PÁTIO VIP SIDEBAR AREA */}
+        <div className="lg:col-span-4 bg-slate-900 rounded-[3rem] p-8 flex flex-col border-[12px] border-slate-800 shadow-2xl sticky lg:top-24 max-h-[calc(100vh-140px)] overflow-hidden text-white">
           <div className="text-center mb-8">
             <div className="text-5xl mb-3 animate-pulse">🏆</div>
-            <h2 className="text-sky-100 font-black text-2xl uppercase tracking-[0.2em] italic leading-none">PÁTIO VIP</h2>
-            <p className="text-sky-400 text-xs font-black mt-2 uppercase tracking-tighter">Estacionamento de Excelência</p>
+            <h2 className="text-indigo-400 font-black text-2xl uppercase tracking-[0.2em] italic leading-none">PÁTIO VIP</h2>
+            <p className="text-slate-500 text-xs font-black mt-2 uppercase tracking-tighter italic">Vagas Reservadas para Elite</p>
           </div>
           
-          <div className="flex-1 space-y-10 overflow-y-auto pr-2 custom-scrollbar lg:pb-10">
-            {/* Excellence Area */}
-            <div className="relative border-x-4 border-dashed border-slate-700 pt-6 pb-2 min-h-[200px]">
+          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar lg:pb-10">
+            <div className="relative border-x-4 border-dashed border-slate-700 pt-8 pb-8 min-h-[400px]">
               <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 px-4">
-                 <span className="text-[10px] font-black text-yellow-400 uppercase tracking-[0.3em] italic">Vagas Premium</span>
+                 <span className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em] italic">Vagas Premium</span>
               </div>
-              <div className="grid grid-cols-2 gap-6 items-center place-items-center mb-4">
+              <div className="grid grid-cols-2 gap-6 items-center place-items-center">
                 <AnimatePresence>
-                  {grouped.excellence.length > 0 ? (
-                    grouped.excellence.map(s => (
-                      <StudentCar 
-                        key={s.id} 
-                        student={s} 
-                        onStatusChange={updateStatus} 
-                        onDelete={deleteStudent} 
-                        isSaving={isSaving}
-                        isSelected 
-                      />
-                    ))
-                  ) : null}
-                  {grouped.excellence.length % 2 !== 0 || grouped.excellence.length === 0 ? (
-                    <div className="w-20 h-28 border-4 border-dashed border-slate-700/50 rounded-2xl flex flex-col items-center justify-center opacity-40 gap-2 scale-90">
-                       <span className="text-[12px] font-black text-slate-500 tracking-widest -rotate-90 origin-center">VAGA</span>
-                       <div className="w-1.5 h-1.5 rounded-full bg-slate-600" />
+                  {grouped.excellence.map(s => (
+                    <StudentCar 
+                      key={s.id} 
+                      student={s} 
+                      onStatusChange={updateStatus} 
+                      onDelete={deleteStudent} 
+                      isSaving={isSaving}
+                      isSelected 
+                    />
+                  ))}
+                  {grouped.excellence.length === 0 && (
+                    <div className="col-span-2 flex flex-col items-center justify-center p-12 opacity-20 border-2 border-dashed border-slate-600 rounded-[2rem] w-full">
+                      <Trophy size={48} className="mb-4" />
+                      <p className="text-[10px] font-black uppercase italic text-center">Nenhum piloto no pátio VIP ainda</p>
                     </div>
-                  ) : null}
-                </AnimatePresence>
-              </div>
-            </div>
-
-            {/* Helper Area */}
-            <div className="relative border-x-4 border-dashed border-slate-700 pt-6 pb-2 min-h-[200px]">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 px-4">
-                 <span className="text-[10px] font-black text-purple-400 uppercase tracking-[0.3em] italic">Ajudantes do Dia</span>
-              </div>
-              <div className="w-full mb-4">
-                {selectedClassId === 'all' ? (
-                  // Group helpers by class for better management when viewing all
-                  <div className="flex flex-col gap-8">
-                    {classes.map(cls => {
-                      const classHelpers = grouped.helper.filter(h => h.classId === cls.id);
-                      if (classHelpers.length === 0) return null;
-                      return (
-                        <div key={cls.id} className="w-full flex flex-col gap-4 items-center">
-                          <div className="w-full h-px bg-slate-800 my-2 flex items-center justify-center">
-                            <span className="bg-slate-900 px-3 text-[8px] font-black text-slate-500 uppercase tracking-widest">{cls.name}</span>
-                          </div>
-                          <Reorder.Group axis="y" values={classHelpers} onReorder={handleReorder} className="flex flex-col gap-6 w-full items-center">
-                            {classHelpers.map(s => (
-                              <Reorder.Item key={s.id} value={s} className="w-fit">
-                                <StudentCar 
-                                  student={s} 
-                                  onStatusChange={updateStatus} 
-                                  onDelete={deleteStudent} 
-                                  isSaving={isSaving}
-                                  isSelected 
-                                />
-                              </Reorder.Item>
-                            ))}
-                          </Reorder.Group>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <Reorder.Group axis="y" values={grouped.helper} onReorder={handleReorder} className="flex flex-col gap-6 w-full items-center">
-                    {grouped.helper.map(s => (
-                      <Reorder.Item key={s.id} value={s} className="w-fit">
-                        <StudentCar 
-                          student={s} 
-                          onStatusChange={updateStatus} 
-                          onDelete={deleteStudent} 
-                          isSaving={isSaving}
-                          isSelected 
-                        />
-                      </Reorder.Item>
-                    ))}
-                  </Reorder.Group>
-                )}
-                <AnimatePresence>
-                  {grouped.helper.length === 0 && (
-                    <motion.div 
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 0.4 }}
-                      exit={{ opacity: 0 }}
-                      className="w-full flex justify-center py-8"
-                    >
-                      <div className="w-20 h-28 border-4 border-dashed border-slate-700/50 rounded-2xl flex flex-col items-center justify-center gap-2 scale-90">
-                         <span className="text-[12px] font-black text-slate-500 tracking-widest -rotate-90 origin-center">VAGA</span>
-                         <div className="w-1.5 h-1.5 rounded-full bg-slate-600" />
-                      </div>
-                    </motion.div>
                   )}
                 </AnimatePresence>
               </div>
@@ -1311,112 +1303,6 @@ export default function App() {
                     )}
                   </button>
                 </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Helpers Area Modal */}
-      <AnimatePresence>
-        {showHelpersArea && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-purple-900/80 backdrop-blur-sm">
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-[3rem] p-8 max-w-5xl w-full h-[90vh] shadow-2xl border-8 border-purple-100 flex flex-col"
-            >
-              <div className="flex justify-between items-center mb-8">
-                <div>
-                  <h2 className="text-3xl font-black text-purple-900 uppercase italic leading-none">Área dos Ajudantes</h2>
-                  <p className="text-gray-500 text-[10px] font-bold mt-2 uppercase tracking-widest">Gerencie as listas de todas as turmas separadas por série.</p>
-                </div>
-                <button onClick={() => setShowHelpersArea(false)} className="p-3 hover:bg-purple-50 rounded-full transition-colors text-purple-400 border-2 border-purple-50">
-                  <X size={24} />
-                </button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar space-y-12">
-                {(Object.entries(
-                  classes.reduce((acc, c) => {
-                    const series = c.series || "Outros";
-                    if (!acc[series]) acc[series] = [];
-                    acc[series].push(c);
-                    return acc;
-                  }, {} as Record<string, ClassGroup[]>)
-                ) as [string, ClassGroup[]][]).sort((a, b) => a[0].localeCompare(b[0])).map(([series, seriesClasses]) => (
-                  <div key={series} className="space-y-6">
-                    <div className="flex items-center gap-4">
-                      <h3 className="text-2xl font-black text-purple-600 uppercase italic tracking-tighter">{series}</h3>
-                      <div className="h-1 flex-1 bg-purple-50 rounded-full" />
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                      {seriesClasses.map(cls => (
-                        <div key={cls.id} className="bg-slate-50 rounded-3xl p-6 border-2 border-slate-100 shadow-sm hover:shadow-md transition-all">
-                          <div className="flex justify-between items-center mb-4">
-                            <h4 className="font-black text-slate-800 uppercase italic">{cls.name}</h4>
-                            <span className="bg-slate-200 text-slate-600 text-[8px] font-black px-2 py-1 rounded-full">{students.filter(s => s.classId === cls.id).length} Pilotos</span>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            {(() => {
-                              const classStudents = students
-                                .filter(s => s.classId === cls.id)
-                                .sort((a, b) => {
-                                  const orderA = a.order ?? 0;
-                                  const orderB = b.order ?? 0;
-                                  if (orderA !== orderB) return orderA - orderB;
-                                  return a.name.localeCompare(b.name);
-                                });
-                              
-                              return classStudents.map((student, idx) => (
-                                <div key={student.id} className="flex items-center gap-3 group bg-white p-2 rounded-xl border border-slate-200">
-                                  <RacingCar color={student.carColor} size={32} />
-                                  <input 
-                                    type="text"
-                                    defaultValue={student.name}
-                                    onBlur={async (e) => {
-                                      if (e.target.value !== student.name) {
-                                        try {
-                                          await updateDoc(doc(db, 'students', student.id), { name: e.target.value });
-                                        } catch (err) {
-                                          handleFirestoreError(err, OperationType.UPDATE, `students/${student.id}`);
-                                        }
-                                      }
-                                    }}
-                                    className="flex-1 bg-transparent border border-transparent focus:border-purple-300 rounded-lg px-2 py-1 text-xs font-bold text-slate-700 outline-none transition-all"
-                                  />
-                                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                                    <button 
-                                      onClick={() => deleteStudent(student.id)}
-                                      className="text-slate-300 hover:text-rose-500 p-1 ml-1"
-                                    >
-                                      <Trash2 size={14} />
-                                    </button>
-                                  </div>
-                                </div>
-                              ));
-                            })()}
-                            {students.filter(s => s.classId === cls.id).length === 0 && (
-                              <p className="text-[10px] text-slate-400 font-bold italic text-center py-4 uppercase">
-                                Ninguém no grid ainda...
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-                
-                {classes.length === 0 && (
-                  <div className="flex flex-col items-center justify-center py-20 text-center opacity-40">
-                    <Users size={64} className="text-purple-300 mb-4" />
-                    <p className="text-slate-500 font-black uppercase italic tracking-widest">Nenhuma turma cadastrada no grid.</p>
-                  </div>
-                )}
               </div>
             </motion.div>
           </div>
