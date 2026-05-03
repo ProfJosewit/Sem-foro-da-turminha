@@ -272,7 +272,7 @@ const StudentCar = ({
       onClick={() => setIsOptionsOpen(!isOptionsOpen)}
     >
       <RacingCar 
-        color={student.carColor} 
+        color={student.status === 'helper' ? '#FFD700' : student.carColor} 
         size={54} 
         className="mb-3 pointer-events-none" 
         showExhaust={student.status === 'green' || student.status === 'excellence'} 
@@ -301,7 +301,6 @@ const StudentCar = ({
               <button title="Atenção" onClick={() => { onStatusChange(student.id, 'yellow'); setIsOptionsOpen(false); }} className="w-10 h-10 rounded-full bg-amber-400 text-white flex items-center justify-center hover:scale-110 shadow-lg transition-transform active:scale-95"><AlertTriangle size={20} strokeWidth={3} /></button>
               <button title="Pare / Saída" onClick={() => { onStatusChange(student.id, 'red'); setIsOptionsOpen(false); }} className="w-10 h-10 rounded-full bg-rose-500 text-white flex items-center justify-center hover:scale-110 shadow-lg transition-transform active:scale-95"><X size={20} strokeWidth={3} /></button>
               <div className="w-0.5 bg-gray-100 mx-1 rounded-full" />
-              <button title="Excedeu limites / Ganhou Corrida" onClick={() => { onStatusChange(student.id, 'excellence'); setIsOptionsOpen(false); }} className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center hover:scale-110 shadow-lg transition-transform active:scale-95"><Trophy size={18} strokeWidth={3} /></button>
               <button title="Ajudante do Dia" onClick={() => { onStatusChange(student.id, 'helper'); setIsOptionsOpen(false); }} className="w-10 h-10 rounded-full bg-purple-500 text-white flex items-center justify-center hover:scale-110 shadow-lg transition-transform active:scale-95"><HandHelping size={18} strokeWidth={3} /></button>
               <div className="w-0.5 bg-gray-100 mx-1 rounded-full" />
               <button 
@@ -920,19 +919,90 @@ export default function App() {
             </div>
           )}
 
-          {/* BEHAVIOR ZONES */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-            {/* HELPERS ZONE (MAIN GRID) */}
-            <div className="bg-purple-100 rounded-[40px] p-6 flex flex-col border-4 border-purple-300 shadow-inner min-h-[550px] xl:col-span-2">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-purple-600 rounded-full border-4 border-white shadow-md flex items-center justify-center text-white text-xl">🤝</div>
-                  <h2 className="font-black text-purple-700 text-xl uppercase italic tracking-tight">Grid de Ajudantes</h2>
-                </div>
-                <span className="bg-purple-200 text-purple-700 text-[10px] font-black px-3 py-1 rounded-full uppercase italic">Ordem de Largada</span>
+          {/* BEHAVIOR ZONES (MAIN TRACKS) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* GREEN ZONE */}
+            <div className="bg-emerald-100 rounded-[40px] p-6 flex flex-col border-4 border-emerald-300 shadow-inner min-h-[500px]">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-emerald-500 rounded-full border-4 border-white shadow-md flex items-center justify-center text-white font-black italic text-xl">1️</div>
+                <h2 className="font-black text-emerald-700 text-xl uppercase italic tracking-tight">Pista Verde</h2>
               </div>
-              
-              <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar min-h-[400px]">
+              <div className="grid grid-cols-2 gap-4 pb-8">
+                <AnimatePresence>
+                  {grouped.green.map(s => (
+                    <StudentCar 
+                      key={s.id} 
+                      student={s} 
+                      onStatusChange={updateStatus} 
+                      onDelete={deleteStudent} 
+                      isSaving={isSaving}
+                    />
+                  ))}
+                </AnimatePresence>
+              </div>
+              <p className="mt-auto text-[10px] text-emerald-600 font-black uppercase text-center py-2 bg-emerald-50 rounded-full border border-emerald-200">Pilotos em Velocidade Máxima! ✨</p>
+            </div>
+
+            {/* YELLOW ZONE */}
+            <div className="bg-amber-100 rounded-[40px] p-6 flex flex-col border-4 border-amber-300 shadow-inner min-h-[500px]">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-amber-400 rounded-full border-4 border-white shadow-md flex items-center justify-center text-white font-black italic text-xl">2️</div>
+                <h2 className="font-black text-amber-700 text-xl uppercase italic tracking-tight">Pista Amarela</h2>
+              </div>
+              <div className="grid grid-cols-2 gap-4 pb-8">
+                <AnimatePresence>
+                  {grouped.yellow.map(s => (
+                    <StudentCar 
+                      key={s.id} 
+                      student={s} 
+                      onStatusChange={updateStatus} 
+                      onDelete={deleteStudent} 
+                      isSaving={isSaving}
+                    />
+                  ))}
+                </AnimatePresence>
+              </div>
+              <p className="mt-auto text-[10px] text-amber-600 font-black uppercase text-center py-2 bg-amber-50 rounded-full border border-amber-200">Reduza a Velocidade! ⚠️</p>
+            </div>
+
+            {/* RED ZONE */}
+            <div className="bg-rose-100 rounded-[40px] p-6 flex flex-col border-4 border-rose-300 shadow-inner min-h-[500px]">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-rose-600 rounded-full border-4 border-white shadow-md flex items-center justify-center text-white font-black italic text-xl">3️</div>
+                <h2 className="font-black text-rose-700 text-xl uppercase italic tracking-tight">Pista Vermelha</h2>
+              </div>
+              <div className="grid grid-cols-2 gap-4 pb-8">
+                <AnimatePresence>
+                  {grouped.red.map(s => (
+                    <StudentCar 
+                      key={s.id} 
+                      student={s} 
+                      onStatusChange={updateStatus} 
+                      onDelete={deleteStudent} 
+                      isSaving={isSaving}
+                    />
+                  ))}
+                </AnimatePresence>
+              </div>
+              <p className="mt-auto text-[10px] text-rose-600 font-black uppercase text-center py-2 bg-rose-50 rounded-full border border-rose-200">Saída de Pista / Box 🚨</p>
+            </div>
+          </div>
+        </div>
+
+        {/* AJUDANTES SIDEBAR AREA */}
+        <div className="lg:col-span-4 bg-slate-900 rounded-[3rem] p-8 flex flex-col border-[12px] border-slate-800 shadow-2xl sticky lg:top-24 max-h-[calc(100vh-140px)] overflow-hidden text-white">
+          <div className="text-center mb-8">
+            <div className="text-5xl mb-3 animate-bounce">🤝</div>
+            <h2 className="text-purple-300 font-black text-2xl uppercase tracking-[0.2em] italic leading-none">AJUDANTES</h2>
+            <p className="text-purple-400 text-xs font-black mt-2 uppercase tracking-tighter">Carros de Ouro do Dia</p>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar lg:pb-10">
+            <div className="relative border-x-4 border-dashed border-purple-800/50 pt-8 pb-8 min-h-[400px]">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 px-4">
+                 <span className="text-[10px] font-black text-purple-400 uppercase tracking-[0.3em] italic">Grid de Ajudantes</span>
+              </div>
+              <div className="w-full mb-4">
                 {selectedClassId === 'all' ? (
                   <div className="flex flex-col gap-8">
                     {classes.map(cls => {
@@ -940,8 +1010,8 @@ export default function App() {
                       if (classHelpers.length === 0) return null;
                       return (
                         <div key={cls.id} className="w-full flex flex-col gap-4 items-center">
-                          <div className="w-full h-px bg-purple-200 my-2 flex items-center justify-center">
-                            <span className="bg-purple-100 px-3 text-[10px] font-black text-purple-400 uppercase tracking-widest italic">{cls.name}</span>
+                          <div className="w-full h-px bg-slate-800 my-2 flex items-center justify-center">
+                            <span className="bg-slate-900 px-3 text-[10px] font-black text-slate-500 uppercase tracking-widest italic">{cls.name}</span>
                           </div>
                           <Reorder.Group axis="y" values={classHelpers} onReorder={handleReorder} className="flex flex-col gap-6 w-full items-center">
                             {classHelpers.map(s => (
@@ -961,7 +1031,7 @@ export default function App() {
                     })}
                   </div>
                 ) : (
-                  <Reorder.Group axis="y" values={grouped.helper} onReorder={handleReorder} className="flex flex-col gap-6 w-full items-center py-4">
+                  <Reorder.Group axis="y" values={grouped.helper} onReorder={handleReorder} className="flex flex-col gap-6 w-full items-center">
                     {grouped.helper.map(s => (
                       <Reorder.Item key={s.id} value={s} className="w-fit">
                         <StudentCar 
@@ -978,124 +1048,22 @@ export default function App() {
                 
                 <AnimatePresence>
                   {grouped.helper.length === 0 && (
-                    <motion.div 
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 0.6 }}
-                      className="flex flex-col items-center justify-center h-64 grayscale opacity-40"
-                    >
-                      <HandHelping size={64} className="text-purple-400 mb-4" />
-                      <p className="text-purple-800 font-black uppercase text-sm italic">Nenhum ajudante escalado</p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-              <p className="mt-4 text-[10px] text-purple-600 font-black uppercase text-center py-2 bg-purple-50 rounded-full border border-purple-200">Arraste para mudar a ordem ✋</p>
-            </div>
-
-            {/* GREEN ZONE */}
-            <div className="bg-emerald-100 rounded-[40px] p-6 flex flex-col border-4 border-emerald-300 shadow-inner min-h-[450px]">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-emerald-500 rounded-full border-4 border-white shadow-md flex items-center justify-center text-white font-black italic">GO</div>
-                <h2 className="font-black text-emerald-700 text-xl uppercase italic tracking-tight">Pista Livre</h2>
-              </div>
-              <div className="grid grid-cols-2 gap-3 pb-8">
-                <AnimatePresence>
-                  {grouped.green.map(s => (
-                    <StudentCar 
-                      key={s.id} 
-                      student={s} 
-                      onStatusChange={updateStatus} 
-                      onDelete={deleteStudent} 
-                      isSaving={isSaving}
-                    />
-                  ))}
-                </AnimatePresence>
-              </div>
-              <p className="mt-auto text-[10px] text-emerald-600 font-black uppercase text-center py-2 bg-emerald-50 rounded-full">Pilotos Comportados ✨</p>
-            </div>
-
-            {/* YELLOW ZONE */}
-            <div className="bg-amber-100 rounded-[40px] p-6 flex flex-col border-4 border-amber-300 shadow-inner min-h-[450px]">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-amber-400 rounded-full border-4 border-white shadow-md flex items-center justify-center text-white font-black">!</div>
-                <h2 className="font-black text-amber-700 text-xl uppercase italic tracking-tight">Atenção</h2>
-              </div>
-              <div className="grid grid-cols-2 gap-3 pb-8">
-                <AnimatePresence>
-                  {grouped.yellow.map(s => (
-                    <StudentCar 
-                      key={s.id} 
-                      student={s} 
-                      onStatusChange={updateStatus} 
-                      onDelete={deleteStudent} 
-                      isSaving={isSaving}
-                    />
-                  ))}
-                </AnimatePresence>
-              </div>
-              <p className="mt-auto text-[10px] text-amber-600 font-black uppercase text-center py-2 bg-amber-50 rounded-full">Reduza a Velocidade! ⚠️</p>
-            </div>
-
-            {/* RED ZONE */}
-            <div className="bg-rose-100 rounded-[40px] p-6 flex flex-col border-4 border-rose-300 shadow-inner min-h-[450px]">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-rose-500 rounded-full border-4 border-white shadow-md flex items-center justify-center text-white font-black italic">STOP</div>
-                <h2 className="font-black text-rose-700 text-xl uppercase italic tracking-tight">Pare</h2>
-              </div>
-              <div className="grid grid-cols-2 gap-3 pb-8">
-                <AnimatePresence>
-                  {grouped.red.map(s => (
-                    <StudentCar 
-                      key={s.id} 
-                      student={s} 
-                      onStatusChange={updateStatus} 
-                      onDelete={deleteStudent} 
-                      isSaving={isSaving}
-                    />
-                  ))}
-                </AnimatePresence>
-              </div>
-              <div className="mt-auto p-4 bg-rose-500 rounded-2xl border-2 border-rose-600 shadow-md">
-                <p className="text-[10px] text-white font-black uppercase text-center leading-tight">⚠️ SAÍDA DE PISTA: Conversar no Box (Coordenação)</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* PÁTIO VIP SIDEBAR AREA */}
-        <div className="lg:col-span-4 bg-slate-900 rounded-[3rem] p-8 flex flex-col border-[12px] border-slate-800 shadow-2xl sticky lg:top-24 max-h-[calc(100vh-140px)] overflow-hidden text-white">
-          <div className="text-center mb-8">
-            <div className="text-5xl mb-3 animate-pulse">🏆</div>
-            <h2 className="text-indigo-400 font-black text-2xl uppercase tracking-[0.2em] italic leading-none">PÁTIO VIP</h2>
-            <p className="text-slate-500 text-xs font-black mt-2 uppercase tracking-tighter italic">Vagas Reservadas para Elite</p>
-          </div>
-          
-          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar lg:pb-10">
-            <div className="relative border-x-4 border-dashed border-slate-700 pt-8 pb-8 min-h-[400px]">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 px-4">
-                 <span className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em] italic">Vagas Premium</span>
-              </div>
-              <div className="grid grid-cols-2 gap-6 items-center place-items-center">
-                <AnimatePresence>
-                  {grouped.excellence.map(s => (
-                    <StudentCar 
-                      key={s.id} 
-                      student={s} 
-                      onStatusChange={updateStatus} 
-                      onDelete={deleteStudent} 
-                      isSaving={isSaving}
-                      isSelected 
-                    />
-                  ))}
-                  {grouped.excellence.length === 0 && (
-                    <div className="col-span-2 flex flex-col items-center justify-center p-12 opacity-20 border-2 border-dashed border-slate-600 rounded-[2rem] w-full">
-                      <Trophy size={48} className="mb-4" />
-                      <p className="text-[10px] font-black uppercase italic text-center">Nenhum piloto no pátio VIP ainda</p>
+                    <div className="flex flex-col items-center justify-center p-12 opacity-20 border-2 border-dashed border-slate-700 rounded-[2rem] w-full">
+                      <HandHelping size={48} className="mb-4" />
+                      <p className="text-[10px] font-black uppercase italic text-center">Nenhum ajudante escalado</p>
                     </div>
                   )}
                 </AnimatePresence>
               </div>
             </div>
+            
+            {grouped.helper.length > 0 && (
+              <div className="mt-8 p-4 bg-purple-900/20 rounded-2xl border border-purple-800/30">
+                <p className="text-[10px] text-purple-300 font-black uppercase text-center leading-tight">
+                  ✨ Arraste os carros para mudar a ordem dos ajudantes.
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="mt-auto pt-6 border-t border-slate-800 text-center">
