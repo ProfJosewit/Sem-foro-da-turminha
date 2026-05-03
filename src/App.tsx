@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, Reorder } from 'motion/react';
 import { 
   Plus, 
   Trash2, 
@@ -19,7 +19,9 @@ import {
   X,
   Upload,
   UserPlus,
-  LogIn
+  LogIn,
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
 import { 
   collection, 
@@ -95,6 +97,7 @@ interface Student {
   classId: string;
   status: BehaviorStatus;
   carColor: string;
+  order: number;
   updatedAt?: any;
 }
 
@@ -113,7 +116,8 @@ const CAR_COLORS = [
 
 // --- Components ---
 
-const RacingCar = ({ color, size = 32, className = "", showExhaust = false }: { color: string, size?: number, className?: string, showExhaust?: boolean }) => {
+const RacingCar = ({ color = '#94a3b8', size = 32, className = "", showExhaust = false }: { color?: string, size?: number, className?: string, showExhaust?: boolean }) => {
+  const carColor = color || '#94a3b8';
   return (
     <div 
       className={`relative ${className}`} 
@@ -131,7 +135,7 @@ const RacingCar = ({ color, size = 32, className = "", showExhaust = false }: { 
         {/* Main Body */}
         <path 
           d="M10 40C10 40 15 20 50 20C85 20 90 40 90 40L95 45L90 50H10L5 45L10 40Z" 
-          fill={color} 
+          fill={carColor} 
         />
         {/* Side Stripes */}
         <path d="M20 35H80" stroke="white" strokeWidth="2" strokeOpacity="0.2" />
@@ -149,9 +153,9 @@ const RacingCar = ({ color, size = 32, className = "", showExhaust = false }: { 
         />
         
         {/* Spoiler */}
-        <rect x="2" y="30" width="18" height="4" rx="2" fill={color} filter="brightness(0.7)" />
-        <path d="M8 34L8 40" stroke={color} strokeWidth="2" filter="brightness(0.7)" />
-        <path d="M14 34L14 40" stroke={color} strokeWidth="2" filter="brightness(0.7)" />
+        <rect x="2" y="30" width="18" height="4" rx="2" fill={carColor} filter="brightness(0.7)" />
+        <path d="M8 34L8 40" stroke={carColor} strokeWidth="2" filter="brightness(0.7)" />
+        <path d="M14 34L14 40" stroke={carColor} strokeWidth="2" filter="brightness(0.7)" />
         
         {/* Wheels */}
         <circle cx="25" cy="50" r="9" fill="#0f172a" />
@@ -262,23 +266,25 @@ const StudentCar = ({
       initial={{ scale: 0.8, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       exit={{ scale: 0.8, opacity: 0 }}
-      whileHover={{ y: -8, scale: 1.02 }}
-      whileTap={{ scale: 0.95 }}
-      className={`relative group flex flex-col items-center p-4 rounded-[2rem] shadow-lg border-b-[12px] ${getBorderColor()} ${getBgColor()} transition-all hover:shadow-2xl cursor-pointer overflow-visible`}
+      whileHover={{ y: -4, scale: 1.01 }}
+      whileDrag={{ scale: 1.05, shadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)", zIndex: 100 }}
+      className={`relative group flex flex-col items-center p-4 rounded-[2rem] shadow-lg border-b-[12px] ${getBorderColor()} ${getBgColor()} transition-all hover:shadow-2xl cursor-grab active:cursor-grabbing overflow-visible`}
       onClick={() => setIsOptionsOpen(!isOptionsOpen)}
     >
       <RacingCar 
         color={student.carColor} 
         size={54} 
-        className="mb-3" 
+        className="mb-3 pointer-events-none" 
         showExhaust={student.status === 'green' || student.status === 'excellence'} 
       />
-      <div className="flex flex-col items-center gap-0.5">
+      <div className="flex flex-col items-center gap-0.5 pointer-events-none">
         <span className={`text-[10px] font-black max-w-[90px] truncate text-center ${getTextColor()} tracking-tighter uppercase italic drop-shadow-sm`}>
           {student.name}
         </span>
         <div className="h-1 w-8 rounded-full bg-slate-200/30" />
       </div>
+
+      {/* Direct Reorder buttons removed in favor of drag and drop */}
 
       <AnimatePresence>
         {isOptionsOpen && (
@@ -353,6 +359,16 @@ export default function App() {
   const [confirmingDeleteAll, setConfirmingDeleteAll] = useState(false);
   const [confirmingReset, setConfirmingReset] = useState(false);
 
+  // Auto-fix stale selected class
+  useEffect(() => {
+    if (selectedClassId !== 'all' && classes.length > 0) {
+      if (!classes.some(c => c.id === selectedClassId)) {
+        console.log("Fixing stale class selection");
+        setSelectedClassId('all');
+      }
+    }
+  }, [classes, selectedClassId]);
+
   // Firestore Sync
   useEffect(() => {
     localStorage.setItem('semaforo_selected_class', selectedClassId);
@@ -374,7 +390,8 @@ export default function App() {
       classesDone = true;
       checkDone();
     }, (err) => {
-      handleFirestoreError(err, OperationType.LIST, 'classes');
+      console.error("Firestore Classes Error:", err);
+      setGlobalError("Erro ao carregar turmas.");
       classesDone = true;
       checkDone();
     });
@@ -385,7 +402,8 @@ export default function App() {
       studentsDone = true;
       checkDone();
     }, (err) => {
-      handleFirestoreError(err, OperationType.LIST, 'students');
+      console.error("Firestore Students Error:", err);
+      setGlobalError("Erro ao carregar pilotos.");
       studentsDone = true;
       checkDone();
     });
@@ -408,6 +426,7 @@ export default function App() {
       classId: selectedClassId,
       status: 'green',
       carColor: newColor,
+      order: students.length,
       updatedAt: serverTimestamp()
     };
     
@@ -469,7 +488,7 @@ export default function App() {
         throw new Error("Nenhum nome válido encontrado na lista.");
       }
 
-      names.forEach(name => {
+      names.forEach((name, index) => {
         const studentId = generateId();
         batch.set(doc(db, 'students', studentId), {
           id: studentId,
@@ -477,6 +496,7 @@ export default function App() {
           classId: targetClassId,
           status: 'green',
           carColor: CAR_COLORS[Math.floor(Math.random() * CAR_COLORS.length)].value,
+          order: students.length + index,
           updatedAt: serverTimestamp()
         });
       });
@@ -531,6 +551,29 @@ export default function App() {
       handleFirestoreError(err, OperationType.DELETE, `students/${id}`);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleReorder = async (newList: Student[]) => {
+    const batch = writeBatch(db);
+    let changed = false;
+    
+    newList.forEach((s, idx) => {
+      if (s.order !== idx) {
+        batch.update(doc(db, 'students', s.id), { 
+          order: idx,
+          updatedAt: serverTimestamp() 
+        });
+        changed = true;
+      }
+    });
+
+    if (changed) {
+      try {
+        await batch.commit();
+      } catch (err) {
+        console.error("Erro ao salvar nova ordem:", err);
+      }
     }
   };
 
@@ -644,7 +687,12 @@ export default function App() {
     if (selectedClassId !== 'all') {
       filtered = filtered.filter(s => s.classId === selectedClassId);
     }
-    return filtered.sort((a, b) => a.name.localeCompare(b.name));
+    return filtered.sort((a, b) => {
+      const orderA = a.order ?? 0;
+      const orderB = b.order ?? 0;
+      if (orderA !== orderB) return orderA - orderB;
+      return a.name.localeCompare(b.name);
+    });
   }, [students, selectedClassId, selectedSeries, classes]);
 
   const grouped = {
@@ -995,24 +1043,64 @@ export default function App() {
               <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 px-4">
                  <span className="text-[10px] font-black text-purple-400 uppercase tracking-[0.3em] italic">Ajudantes do Dia</span>
               </div>
-              <div className="grid grid-cols-2 gap-6 items-center place-items-center mb-4">
+              <div className="w-full mb-4">
+                {selectedClassId === 'all' ? (
+                  // Group helpers by class for better management when viewing all
+                  <div className="flex flex-col gap-8">
+                    {classes.map(cls => {
+                      const classHelpers = grouped.helper.filter(h => h.classId === cls.id);
+                      if (classHelpers.length === 0) return null;
+                      return (
+                        <div key={cls.id} className="w-full flex flex-col gap-4 items-center">
+                          <div className="w-full h-px bg-slate-800 my-2 flex items-center justify-center">
+                            <span className="bg-slate-900 px-3 text-[8px] font-black text-slate-500 uppercase tracking-widest">{cls.name}</span>
+                          </div>
+                          <Reorder.Group axis="y" values={classHelpers} onReorder={handleReorder} className="flex flex-col gap-6 w-full items-center">
+                            {classHelpers.map(s => (
+                              <Reorder.Item key={s.id} value={s} className="w-fit">
+                                <StudentCar 
+                                  student={s} 
+                                  onStatusChange={updateStatus} 
+                                  onDelete={deleteStudent} 
+                                  isSaving={isSaving}
+                                  isSelected 
+                                />
+                              </Reorder.Item>
+                            ))}
+                          </Reorder.Group>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <Reorder.Group axis="y" values={grouped.helper} onReorder={handleReorder} className="flex flex-col gap-6 w-full items-center">
+                    {grouped.helper.map(s => (
+                      <Reorder.Item key={s.id} value={s} className="w-fit">
+                        <StudentCar 
+                          student={s} 
+                          onStatusChange={updateStatus} 
+                          onDelete={deleteStudent} 
+                          isSaving={isSaving}
+                          isSelected 
+                        />
+                      </Reorder.Item>
+                    ))}
+                  </Reorder.Group>
+                )}
                 <AnimatePresence>
-                  {grouped.helper.map(s => (
-                    <StudentCar 
-                      key={s.id} 
-                      student={s} 
-                      onStatusChange={updateStatus} 
-                      onDelete={deleteStudent} 
-                      isSaving={isSaving}
-                      isSelected 
-                    />
-                  ))}
-                  {grouped.helper.length % 2 !== 0 || grouped.helper.length === 0 ? (
-                    <div className="w-20 h-28 border-4 border-dashed border-slate-700/50 rounded-2xl flex flex-col items-center justify-center opacity-40 gap-2 scale-90">
-                       <span className="text-[12px] font-black text-slate-500 tracking-widest -rotate-90 origin-center">VAGA</span>
-                       <div className="w-1.5 h-1.5 rounded-full bg-slate-600" />
-                    </div>
-                  ) : null}
+                  {grouped.helper.length === 0 && (
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 0.4 }}
+                      exit={{ opacity: 0 }}
+                      className="w-full flex justify-center py-8"
+                    >
+                      <div className="w-20 h-28 border-4 border-dashed border-slate-700/50 rounded-2xl flex flex-col items-center justify-center gap-2 scale-90">
+                         <span className="text-[12px] font-black text-slate-500 tracking-widest -rotate-90 origin-center">VAGA</span>
+                         <div className="w-1.5 h-1.5 rounded-full bg-slate-600" />
+                      </div>
+                    </motion.div>
+                  )}
                 </AnimatePresence>
               </div>
             </div>
@@ -1273,31 +1361,44 @@ export default function App() {
                           </div>
                           
                           <div className="space-y-2">
-                            {students.filter(s => s.classId === cls.id).sort((a, b) => a.name.localeCompare(b.name)).map(student => (
-                              <div key={student.id} className="flex items-center gap-3 group bg-white p-2 rounded-xl border border-slate-200">
-                                <RacingCar color={student.carColor} size={32} />
-                                <input 
-                                  type="text"
-                                  defaultValue={student.name}
-                                  onBlur={async (e) => {
-                                    if (e.target.value !== student.name) {
-                                      try {
-                                        await updateDoc(doc(db, 'students', student.id), { name: e.target.value });
-                                      } catch (err) {
-                                        handleFirestoreError(err, OperationType.UPDATE, `students/${student.id}`);
+                            {(() => {
+                              const classStudents = students
+                                .filter(s => s.classId === cls.id)
+                                .sort((a, b) => {
+                                  const orderA = a.order ?? 0;
+                                  const orderB = b.order ?? 0;
+                                  if (orderA !== orderB) return orderA - orderB;
+                                  return a.name.localeCompare(b.name);
+                                });
+                              
+                              return classStudents.map((student, idx) => (
+                                <div key={student.id} className="flex items-center gap-3 group bg-white p-2 rounded-xl border border-slate-200">
+                                  <RacingCar color={student.carColor} size={32} />
+                                  <input 
+                                    type="text"
+                                    defaultValue={student.name}
+                                    onBlur={async (e) => {
+                                      if (e.target.value !== student.name) {
+                                        try {
+                                          await updateDoc(doc(db, 'students', student.id), { name: e.target.value });
+                                        } catch (err) {
+                                          handleFirestoreError(err, OperationType.UPDATE, `students/${student.id}`);
+                                        }
                                       }
-                                    }
-                                  }}
-                                  className="flex-1 bg-transparent border border-transparent focus:border-purple-300 rounded-lg px-2 py-1 text-xs font-bold text-slate-700 outline-none transition-all"
-                                />
-                                <button 
-                                  onClick={() => deleteStudent(student.id)}
-                                  className="text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all p-1"
-                                >
-                                  <Trash2 size={12} />
-                                </button>
-                              </div>
-                            ))}
+                                    }}
+                                    className="flex-1 bg-transparent border border-transparent focus:border-purple-300 rounded-lg px-2 py-1 text-xs font-bold text-slate-700 outline-none transition-all"
+                                  />
+                                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                                    <button 
+                                      onClick={() => deleteStudent(student.id)}
+                                      className="text-slate-300 hover:text-rose-500 p-1 ml-1"
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </div>
+                                </div>
+                              ));
+                            })()}
                             {students.filter(s => s.classId === cls.id).length === 0 && (
                               <p className="text-[10px] text-slate-400 font-bold italic text-center py-4 uppercase">
                                 Ninguém no grid ainda...

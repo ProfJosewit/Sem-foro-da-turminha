@@ -12,31 +12,30 @@ service cloud.firestore {
     // Students Collection
     match /students/{studentId} {
       function isValidStudent(data) {
-        return data.keys().hasAll(['id', 'name', 'classId', 'status', 'carColor', 'updatedAt']) &&
-               data.keys().size() == 6 &&
+        return data.keys().hasAll(['id', 'name', 'classId', 'status', 'carColor']) &&
                data.id is string && data.id.size() <= 128 &&
                data.name is string && data.name.size() <= 100 &&
                data.classId is string && data.classId.size() <= 128 &&
                data.status in ['green', 'yellow', 'red', 'excellence', 'helper'] &&
-               data.carColor is string && data.carColor.size() <= 20 &&
-               (data.updatedAt is timestamp || data.updatedAt == request.time);
+               data.carColor is string && data.carColor.size() <= 50 &&
+               (!data.keys().hasAny(['updatedAt']) || data.updatedAt is timestamp || data.updatedAt == request.time) &&
+               (!data.keys().hasAny(['order']) || data.order is int);
       }
 
       allow read: if true;
       allow create: if isValidStudent(request.resource.data);
-      allow update: if true; // Partial updates allowed
+      allow update: if isValidStudent(request.resource.data);
       allow delete: if true;
     }
 
     // Classes Collection
     match /classes/{classId} {
       function isValidClass(data) {
-        return data.keys().hasAll(['id', 'name', 'series', 'updatedAt']) &&
-               data.keys().size() == 4 &&
+        return data.keys().hasAll(['id', 'name', 'series']) &&
                data.id is string && data.id.size() <= 128 &&
                data.name is string && data.name.size() <= 50 &&
                data.series is string && data.series.size() <= 100 &&
-               (data.updatedAt is timestamp || data.updatedAt == request.time);
+               (!data.keys().hasAny(['updatedAt']) || data.updatedAt is timestamp || data.updatedAt == request.time);
       }
 
       allow read: if true;
