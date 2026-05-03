@@ -221,15 +221,18 @@ const StudentCar = ({
   student, 
   onStatusChange, 
   onDelete,
+  isSaving = false,
   isSelected = false
 }: { 
   student: Student, 
   onStatusChange: (id: string, status: BehaviorStatus) => void,
   onDelete: (id: string) => void,
+  isSaving?: boolean,
   isSelected?: boolean,
   key?: React.Key
 }) => {
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const getBorderColor = () => {
     switch (student.status) {
@@ -295,7 +298,26 @@ const StudentCar = ({
               <button title="Excedeu limites / Ganhou Corrida" onClick={() => { onStatusChange(student.id, 'excellence'); setIsOptionsOpen(false); }} className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center hover:scale-110 shadow-lg transition-transform active:scale-95"><Trophy size={18} strokeWidth={3} /></button>
               <button title="Ajudante do Dia" onClick={() => { onStatusChange(student.id, 'helper'); setIsOptionsOpen(false); }} className="w-10 h-10 rounded-full bg-purple-500 text-white flex items-center justify-center hover:scale-110 shadow-lg transition-transform active:scale-95"><HandHelping size={18} strokeWidth={3} /></button>
               <div className="w-0.5 bg-gray-100 mx-1 rounded-full" />
-              <button title="Remover Piloto" onClick={() => { if(confirm('Excluir piloto?')) onDelete(student.id); setIsOptionsOpen(false); }} className="w-10 h-10 rounded-full bg-slate-100 text-rose-500 flex items-center justify-center hover:bg-rose-50 shadow-lg transition-transform active:scale-95"><Trash2 size={18} strokeWidth={3} /></button>
+              <button 
+                title="Remover Piloto" 
+                disabled={isSaving}
+                onClick={() => setConfirmDelete(!confirmDelete)} 
+                className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-95 disabled:opacity-50 ${confirmDelete ? 'bg-rose-600 text-white' : 'bg-slate-100 text-rose-500 hover:bg-rose-50'}`}
+              >
+                {isSaving && confirmDelete ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Trash2 size={18} strokeWidth={3} />
+                )}
+              </button>
+              {confirmDelete && (
+                <button 
+                  onClick={() => { onDelete(student.id); setIsOptionsOpen(false); setConfirmDelete(false); }}
+                  className="bg-rose-600 text-white text-[8px] font-black px-3 rounded-full uppercase italic animate-pulse"
+                >
+                  Confirmar?
+                </button>
+              )}
             </motion.div>
           </>
         )}
@@ -326,6 +348,10 @@ export default function App() {
   const [newClassSeries, setNewClassSeries] = useState('');
   const [showAlert, setShowAlert] = useState<{name: string} | null>(null);
   const [globalError, setGlobalError] = useState<string | null>(null);
+
+  const [confirmingDeleteClass, setConfirmingDeleteClass] = useState<string | null>(null);
+  const [confirmingDeleteAll, setConfirmingDeleteAll] = useState(false);
+  const [confirmingReset, setConfirmingReset] = useState(false);
 
   // Firestore Sync
   useEffect(() => {
@@ -407,7 +433,7 @@ export default function App() {
       return;
     }
     if (!textClean) {
-      setGlobalError("Por favor, cole a lista de nomes dos alunos.");
+      setGlobalError("Por favor, digite a lista de nomes.");
       return;
     }
     
@@ -436,7 +462,8 @@ export default function App() {
         batch.set(doc(db, 'classes', targetClassId), newClass);
       }
 
-      const names = textClean.split(/[\n,]/).map(n => n.trim()).filter(n => n.length > 0);
+      // splitting by new line, comma, semicolon or tab
+      const names = textClean.split(/[\n,;\t]/).map(n => n.trim()).filter(n => n.length > 0);
       
       if (names.length === 0) {
         throw new Error("Nenhum nome válido encontrado na lista.");
@@ -465,7 +492,8 @@ export default function App() {
       
     } catch (err) {
       console.error("Erro no Bulk Add:", err);
-      setGlobalError("Falha ao salvar. Verifique se preencheu tudo corretamente.");
+      setGlobalError("Erro ao salvar! Verifique se os nomes estão corretos.");
+      handleFirestoreError(err, OperationType.WRITE, 'bulk-add');
     } finally {
       setIsSaving(false);
     }
@@ -479,8 +507,13 @@ export default function App() {
 
     try {
       setIsSaving(true);
-      await updateDoc(doc(db, 'students', id), { status });
+      setGlobalError(null);
+      await updateDoc(doc(db, 'students', id), { 
+        status,
+        updatedAt: serverTimestamp()
+      });
     } catch (err) {
+      setGlobalError("Erro ao atualizar status.");
       handleFirestoreError(err, OperationType.UPDATE, `students/${id}`);
     } finally {
       setIsSaving(false);
@@ -490,8 +523,11 @@ export default function App() {
   const deleteStudent = async (id: string) => {
     try {
       setIsSaving(true);
+      setGlobalError(null);
       await deleteDoc(doc(db, 'students', id));
-    } catch (err) {
+    } catch (err: any) {
+      console.error("Erro ao excluir piloto:", err);
+      setGlobalError("Erro ao remover piloto. Tente novamente.");
       handleFirestoreError(err, OperationType.DELETE, `students/${id}`);
     } finally {
       setIsSaving(false);
@@ -499,19 +535,24 @@ export default function App() {
   };
 
   const resetAll = async () => {
-    if (!confirm('Deseja mover todos os carros desta turma de volta para o sinal Verde?')) return;
-    
     setIsSaving(true);
+    setGlobalError(null);
     try {
       const batch = writeBatch(db);
       const toReset = currentStudents.filter(s => s.status !== 'green');
       
       toReset.forEach(s => {
-        batch.update(doc(db, 'students', s.id), { status: 'green' });
+        batch.update(doc(db, 'students', s.id), { 
+          status: 'green',
+          updatedAt: serverTimestamp() 
+        });
       });
       
       await batch.commit();
-    } catch (err) {
+      setConfirmingReset(false);
+    } catch (err: any) {
+      console.error("Erro ao resetar:", err);
+      setGlobalError("Erro ao reiniciar a turma. Tente novamente.");
       handleFirestoreError(err, OperationType.WRITE, 'batch-reset');
     } finally {
       setIsSaving(false);
@@ -542,9 +583,8 @@ export default function App() {
   };
 
   const deleteClass = async (id: string) => {
-    if (!confirm('Isso apagará a turma e todos os alunos dela. Confirmar?')) return;
-    
     setIsSaving(true);
+    setGlobalError(null);
     try {
       const batch = writeBatch(db);
       const studentsToDelete = students.filter(s => s.classId === id);
@@ -555,9 +595,33 @@ export default function App() {
       batch.delete(doc(db, 'classes', id));
       
       await batch.commit();
+      setConfirmingDeleteClass(null);
       if (selectedClassId === id) setSelectedClassId('all');
-    } catch (err) {
+    } catch (err: any) {
+      console.error("Erro ao excluir turma:", err);
+      setGlobalError("Erro ao excluir turma. Verifique sua conexão.");
       handleFirestoreError(err, OperationType.WRITE, 'batch-delete-class');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const deleteAllData = async () => {
+    setIsSaving(true);
+    setGlobalError(null);
+    try {
+      const batch = writeBatch(db);
+      students.forEach(s => batch.delete(doc(db, 'students', s.id)));
+      classes.forEach(c => batch.delete(doc(db, 'classes', c.id)));
+      await batch.commit();
+      setConfirmingDeleteAll(false);
+      setSelectedClassId('all');
+      setSelectedSeries('all');
+      setShowClassesModal(false);
+    } catch (err: any) {
+      console.error("Erro ao apagar tudo:", err);
+      setGlobalError("Erro ao apagar todos os dados.");
+      handleFirestoreError(err, OperationType.WRITE, 'bulk-delete-all');
     } finally {
       setIsSaving(false);
     }
@@ -748,12 +812,33 @@ export default function App() {
             </button>
 
             <button 
-              onClick={resetAll}
-              className="bg-white border-2 border-sky-100 p-2 rounded-xl text-sky-400 hover:bg-sky-50 transition-all shadow-sm active:scale-95"
+              onClick={() => setConfirmingReset(!confirmingReset)}
+              className={`border-2 p-2 rounded-xl transition-all shadow-sm active:scale-95 flex items-center gap-2 overflow-hidden ${confirmingReset ? 'bg-amber-500 border-amber-600 text-white px-4' : 'bg-white border-sky-100 text-sky-400 hover:bg-sky-50'}`}
               title="Resetar Turma"
             >
-              <RotateCcw size={20} />
+              <RotateCcw size={20} className={confirmingReset ? 'animate-spin' : ''} />
+              {confirmingReset && <span onClick={(e) => { e.stopPropagation(); resetAll(); }} className="text-[10px] font-black uppercase">Confirmar Reset?</span>}
             </button>
+
+            {selectedClassId !== 'all' && (
+              <button 
+                onClick={() => setConfirmingDeleteClass(confirmingDeleteClass === selectedClassId ? null : selectedClassId)}
+                disabled={isSaving}
+                className={`border-2 p-2 rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-50 flex items-center gap-2 overflow-hidden ${confirmingDeleteClass === selectedClassId ? 'bg-rose-600 border-rose-700 text-white px-4' : 'bg-rose-50 border-rose-100 text-rose-500 hover:bg-rose-100'}`}
+                title="Excluir Turma Completa"
+              >
+                {isSaving && confirmingDeleteClass === selectedClassId ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <Trash2 size={20} />
+                    {confirmingDeleteClass === selectedClassId && (
+                      <span onClick={(e) => { e.stopPropagation(); deleteClass(selectedClassId); }} className="text-[10px] font-black uppercase whitespace-nowrap">Excluir Turma?</span>
+                    )}
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -806,7 +891,13 @@ export default function App() {
               <div className="grid grid-cols-2 gap-3 pb-8">
                 <AnimatePresence>
                   {grouped.green.map(s => (
-                    <StudentCar key={s.id} student={s} onStatusChange={updateStatus} onDelete={deleteStudent} />
+                    <StudentCar 
+                      key={s.id} 
+                      student={s} 
+                      onStatusChange={updateStatus} 
+                      onDelete={deleteStudent} 
+                      isSaving={isSaving}
+                    />
                   ))}
                 </AnimatePresence>
               </div>
@@ -822,7 +913,13 @@ export default function App() {
               <div className="grid grid-cols-2 gap-3 pb-8">
                 <AnimatePresence>
                   {grouped.yellow.map(s => (
-                    <StudentCar key={s.id} student={s} onStatusChange={updateStatus} onDelete={deleteStudent} />
+                    <StudentCar 
+                      key={s.id} 
+                      student={s} 
+                      onStatusChange={updateStatus} 
+                      onDelete={deleteStudent} 
+                      isSaving={isSaving}
+                    />
                   ))}
                 </AnimatePresence>
               </div>
@@ -838,7 +935,13 @@ export default function App() {
               <div className="grid grid-cols-2 gap-3 pb-8">
                 <AnimatePresence>
                   {grouped.red.map(s => (
-                    <StudentCar key={s.id} student={s} onStatusChange={updateStatus} onDelete={deleteStudent} />
+                    <StudentCar 
+                      key={s.id} 
+                      student={s} 
+                      onStatusChange={updateStatus} 
+                      onDelete={deleteStudent} 
+                      isSaving={isSaving}
+                    />
                   ))}
                 </AnimatePresence>
               </div>
@@ -867,7 +970,14 @@ export default function App() {
                 <AnimatePresence>
                   {grouped.excellence.length > 0 ? (
                     grouped.excellence.map(s => (
-                      <StudentCar key={s.id} student={s} onStatusChange={updateStatus} onDelete={deleteStudent} isSelected />
+                      <StudentCar 
+                        key={s.id} 
+                        student={s} 
+                        onStatusChange={updateStatus} 
+                        onDelete={deleteStudent} 
+                        isSaving={isSaving}
+                        isSelected 
+                      />
                     ))
                   ) : null}
                   {grouped.excellence.length % 2 !== 0 || grouped.excellence.length === 0 ? (
@@ -888,7 +998,14 @@ export default function App() {
               <div className="grid grid-cols-2 gap-6 items-center place-items-center mb-4">
                 <AnimatePresence>
                   {grouped.helper.map(s => (
-                    <StudentCar key={s.id} student={s} onStatusChange={updateStatus} onDelete={deleteStudent} isSelected />
+                    <StudentCar 
+                      key={s.id} 
+                      student={s} 
+                      onStatusChange={updateStatus} 
+                      onDelete={deleteStudent} 
+                      isSaving={isSaving}
+                      isSelected 
+                    />
                   ))}
                   {grouped.helper.length % 2 !== 0 || grouped.helper.length === 0 ? (
                     <div className="w-20 h-28 border-4 border-dashed border-slate-700/50 rounded-2xl flex flex-col items-center justify-center opacity-40 gap-2 scale-90">
@@ -928,14 +1045,73 @@ export default function App() {
               
               <div className="space-y-3 max-h-[300px] overflow-y-auto mb-8 pr-2 custom-scrollbar">
                 {classes.map(c => (
-                  <div key={c.id} className="flex items-center justify-between bg-sky-50 p-4 rounded-2xl border-2 border-sky-100 group">
-                    <div className="flex flex-col">
-                      <span className="font-black text-sky-700 tracking-tight">{c.name}</span>
-                      <span className="text-[10px] text-sky-400 font-bold uppercase">{c.series}</span>
+                  <div key={c.id} className="flex flex-col bg-sky-50 p-4 rounded-2xl border-2 border-sky-100 group gap-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col">
+                        <span className="font-black text-sky-700 tracking-tight">{c.name}</span>
+                        <span className="text-[10px] text-sky-400 font-bold uppercase">{c.series}</span>
+                      </div>
+                      <button 
+                        onClick={() => setConfirmingDeleteClass(confirmingDeleteClass === c.id ? null : c.id)} 
+                        disabled={isSaving}
+                        className="text-rose-400 hover:text-rose-600 transition-all p-2 bg-white rounded-xl border border-rose-100 shadow-sm disabled:opacity-50"
+                      >
+                        {isSaving && confirmingDeleteClass === c.id ? (
+                          <div className="w-4 h-4 border-2 border-rose-400 border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Trash2 size={16}/>
+                        )}
+                      </button>
                     </div>
-                    <button onClick={() => deleteClass(c.id)} className="text-rose-400 opacity-0 group-hover:opacity-100 hover:text-rose-600 transition-all p-1"><Trash2 size={16}/></button>
+                    {confirmingDeleteClass === c.id && (
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        className="flex flex-col gap-2 mt-2 pt-2 border-t border-rose-100"
+                      >
+                        <p className="text-[9px] font-bold text-rose-600 uppercase text-center">Apagar turma e alunos?</p>
+                        <div className="flex gap-2">
+                          <button onClick={() => deleteClass(c.id)} className="flex-1 bg-rose-500 text-white text-[10px] font-black py-2 rounded-lg shadow-md hover:bg-rose-600">SIM, EXCLUIR</button>
+                          <button onClick={() => setConfirmingDeleteClass(null)} className="flex-1 bg-slate-200 text-slate-600 text-[10px] font-black py-2 rounded-lg">CALCELAR</button>
+                        </div>
+                      </motion.div>
+                    )}
                   </div>
                 ))}
+              </div>
+
+              <div className="p-4 bg-rose-50 rounded-3xl border-2 border-rose-100 mb-8 overflow-hidden">
+                <h3 className="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <AlertTriangle size={12}/> Zona de Perigo
+                </h3>
+                {confirmingDeleteAll ? (
+                  <div className="space-y-4">
+                    <p className="text-[9px] font-bold text-rose-700 text-center uppercase leading-tight italic">
+                      ⚠️ Você irá apagar TODAS as turmas e TODOS os alunos. Esta ação é definitiva. Deseja continuar?
+                    </p>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={deleteAllData}
+                        className="flex-1 bg-rose-600 text-white text-[10px] font-black py-3 rounded-xl shadow-lg animate-shake"
+                      >
+                        SIM, LIMPAR TUDO! 🏎️💥
+                      </button>
+                      <button 
+                        onClick={() => setConfirmingDeleteAll(false)}
+                        className="flex-1 bg-white text-slate-600 text-[10px] font-black py-3 rounded-xl border border-rose-200"
+                      >
+                        CANCELAR
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button 
+                    onClick={() => setConfirmingDeleteAll(true)}
+                    className="w-full bg-white text-rose-500 py-3 rounded-2xl text-[10px] font-black border-2 border-rose-200 hover:bg-rose-500 hover:text-white transition-all uppercase tracking-widest"
+                  >
+                    Apagar Todo App 🏁
+                  </button>
+                )}
               </div>
 
               <div className="pt-6 border-t-2 border-gray-100 space-y-3">
