@@ -22,9 +22,10 @@
       "type": "object",
       "properties": {
         "id": { "type": "string" },
-        "name": { "type": "string" }
+        "name": { "type": "string" },
+        "series": { "type": "string", "description": "Grade/Series level (e.g., 1º Ano, 2º Ano)" }
       },
-      "required": ["id", "name"]
+      "required": ["id", "name", "series"]
     }
   },
   "firestore": {

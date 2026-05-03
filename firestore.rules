@@ -12,8 +12,8 @@ service cloud.firestore {
     // Students Collection
     match /students/{studentId} {
       function isValidStudent(data) {
-        return data.keys().hasAll(['id', 'name', 'classId', 'status', 'carColor']) &&
-               data.keys().size() == 5 &&
+        return data.keys().hasAll(['id', 'name', 'classId', 'status', 'carColor', 'updatedAt']) &&
+               data.keys().size() == 6 &&
                data.id is string && data.id.size() <= 128 &&
                data.name is string && data.name.size() <= 100 &&
                data.classId is string && data.classId.size() <= 128 &&
@@ -29,10 +29,11 @@ service cloud.firestore {
     // Classes Collection
     match /classes/{classId} {
       function isValidClass(data) {
-        return data.keys().hasAll(['id', 'name']) &&
-               data.keys().size() == 2 &&
+        return data.keys().hasAll(['id', 'name', 'series', 'updatedAt']) &&
+               data.keys().size() == 4 &&
                data.id is string && data.id.size() <= 128 &&
-               data.name is string && data.name.size() <= 50;
+               data.name is string && data.name.size() <= 50 &&
+               data.series is string && data.series.size() <= 100;
       }
 
       allow read: if true;

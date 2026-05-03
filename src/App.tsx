@@ -28,7 +28,8 @@ import {
   setDoc, 
   updateDoc, 
   deleteDoc, 
-  writeBatch 
+  writeBatch,
+  serverTimestamp 
 } from 'firebase/firestore';
 import { db, auth } from './firebase';
 
@@ -84,6 +85,8 @@ type BehaviorStatus = 'green' | 'yellow' | 'red' | 'excellence' | 'helper';
 interface ClassGroup {
   id: string;
   name: string;
+  series: string;
+  updatedAt?: any;
 }
 
 interface Student {
@@ -92,6 +95,7 @@ interface Student {
   classId: string;
   status: BehaviorStatus;
   carColor: string;
+  updatedAt?: any;
 }
 
 const CAR_COLORS = [
@@ -108,6 +112,95 @@ const CAR_COLORS = [
 ];
 
 // --- Components ---
+
+const RacingCar = ({ color, size = 32, className = "", showExhaust = false }: { color: string, size?: number, className?: string, showExhaust?: boolean }) => {
+  return (
+    <div 
+      className={`relative ${className}`} 
+      style={{ width: size, height: size * 0.6 }}
+    >
+      <svg 
+        viewBox="0 0 100 60" 
+        fill="none" 
+        xmlns="http://www.w3.org/2000/svg"
+        className="w-full h-full drop-shadow-xl"
+      >
+        {/* Shadow under car */}
+        <ellipse cx="50" cy="55" rx="40" ry="4" fill="rgba(0,0,0,0.15)" />
+        
+        {/* Main Body */}
+        <path 
+          d="M10 40C10 40 15 20 50 20C85 20 90 40 90 40L95 45L90 50H10L5 45L10 40Z" 
+          fill={color} 
+        />
+        {/* Side Stripes */}
+        <path d="M20 35H80" stroke="white" strokeWidth="2" strokeOpacity="0.2" />
+        
+        {/* Cabin/Windows */}
+        <path 
+          d="M35 25C35 25 40 15 55 15C70 15 75 25 75 25" 
+          stroke="rgba(255,255,255,0.6)" 
+          strokeWidth="4" 
+          strokeLinecap="round" 
+        />
+        <path 
+          d="M40 25C40 25 43 18 55 18C67 18 70 25 70 25" 
+          fill="rgba(0,0,0,0.4)" 
+        />
+        
+        {/* Spoiler */}
+        <rect x="2" y="30" width="18" height="4" rx="2" fill={color} filter="brightness(0.7)" />
+        <path d="M8 34L8 40" stroke={color} strokeWidth="2" filter="brightness(0.7)" />
+        <path d="M14 34L14 40" stroke={color} strokeWidth="2" filter="brightness(0.7)" />
+        
+        {/* Wheels */}
+        <circle cx="25" cy="50" r="9" fill="#0f172a" />
+        <circle cx="25" cy="50" r="5" fill="#94a3b8" />
+        <circle cx="75" cy="50" r="9" fill="#0f172a" />
+        <circle cx="75" cy="50" r="5" fill="#94a3b8" />
+        
+        {/* Wheels spinning effect */}
+        <circle cx="25" cy="50" r="7" stroke="white" strokeWidth="1" strokeOpacity="0.3" strokeDasharray="4 4" />
+        <circle cx="75" cy="50" r="7" stroke="white" strokeWidth="1" strokeOpacity="0.3" strokeDasharray="4 4" />
+        
+        {/* Highlights */}
+        <path d="M35 22C45 22 55 22 65 22" stroke="white" strokeWidth="1" strokeOpacity="0.4" strokeLinecap="round" />
+        
+        {/* Headlights */}
+        <rect x="88" y="38" width="6" height="4" rx="2" fill="#fbbf24" opacity={0.9} />
+      </svg>
+      {/* Light Glow */}
+      <div 
+        className="absolute top-1/2 -right-4 -translate-y-1/2 w-12 h-12 bg-yellow-400/10 blur-xl rounded-full opacity-50"
+      />
+      
+      {/* Exhaust Smoke */}
+      {showExhaust && (
+        <div className="absolute -left-4 top-1/2 -translate-y-1/2 flex gap-1">
+          {[...Array(3)].map((_, i) => (
+            <motion.div 
+              key={i}
+              initial={{ scale: 0, opacity: 0.8, x: 0 }}
+              animate={{ 
+                scale: [0, 1.5, 2], 
+                opacity: [0.8, 0.4, 0], 
+                x: [-10, -20, -30],
+                y: [0, -5, 5]
+              }}
+              transition={{ 
+                duration: 0.8, 
+                repeat: Infinity, 
+                delay: i * 0.2,
+                ease: "easeOut"
+              }}
+              className="w-2 h-2 rounded-full bg-slate-300/40"
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const ColorPicker = ({ selected, onSelect }: { selected: string, onSelect: (color: string) => void }) => (
   <div className="flex flex-wrap gap-2">
@@ -140,18 +233,18 @@ const StudentCar = ({
 
   const getBorderColor = () => {
     switch (student.status) {
-      case 'green': return 'border-emerald-400';
-      case 'yellow': return 'border-amber-400';
-      case 'red': return 'border-rose-400';
-      case 'excellence': return 'border-indigo-300';
-      case 'helper': return 'border-purple-300';
+      case 'green': return 'border-emerald-400 shadow-emerald-200/50';
+      case 'yellow': return 'border-amber-400 shadow-amber-200/50';
+      case 'red': return 'border-rose-400 shadow-rose-200/50';
+      case 'excellence': return 'border-indigo-400 shadow-indigo-200/50';
+      case 'helper': return 'border-purple-400 shadow-purple-200/50';
       default: return 'border-gray-200';
     }
   };
 
   const getBgColor = () => {
-    if (student.status === 'excellence') return 'bg-indigo-900/50';
-    if (student.status === 'helper') return 'bg-purple-900/50';
+    if (student.status === 'excellence') return 'bg-indigo-900/40';
+    if (student.status === 'helper') return 'bg-purple-900/40';
     return isSelected ? 'bg-sky-50' : 'bg-white';
   };
 
@@ -166,35 +259,43 @@ const StudentCar = ({
       initial={{ scale: 0.8, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       exit={{ scale: 0.8, opacity: 0 }}
-      className={`relative group flex flex-col items-center p-2 rounded-xl shadow-sm border-b-4 ${getBorderColor()} ${getBgColor()} transition-all hover:shadow-md cursor-pointer`}
+      whileHover={{ y: -8, scale: 1.02 }}
+      whileTap={{ scale: 0.95 }}
+      className={`relative group flex flex-col items-center p-4 rounded-[2rem] shadow-lg border-b-[12px] ${getBorderColor()} ${getBgColor()} transition-all hover:shadow-2xl cursor-pointer overflow-visible`}
       onClick={() => setIsOptionsOpen(!isOptionsOpen)}
     >
-      <div style={{ color: student.carColor }}>
-        <Car size={32} fill={student.carColor} fillOpacity={0.2} strokeWidth={2.5} />
+      <RacingCar 
+        color={student.carColor} 
+        size={54} 
+        className="mb-3" 
+        showExhaust={student.status === 'green' || student.status === 'excellence'} 
+      />
+      <div className="flex flex-col items-center gap-0.5">
+        <span className={`text-[10px] font-black max-w-[90px] truncate text-center ${getTextColor()} tracking-tighter uppercase italic drop-shadow-sm`}>
+          {student.name}
+        </span>
+        <div className="h-1 w-8 rounded-full bg-slate-200/30" />
       </div>
-      <span className={`text-[10px] font-black mt-1 max-w-[70px] truncate text-center ${getTextColor()}`}>
-        {student.name}
-      </span>
 
       <AnimatePresence>
         {isOptionsOpen && (
           <>
             <div className="fixed inset-0 z-50" onClick={(e) => { e.stopPropagation(); setIsOptionsOpen(false); }} />
             <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              className="absolute bottom-full mb-2 z-[60] bg-white shadow-2xl rounded-2xl p-2 border-2 border-sky-100 flex gap-2"
+              initial={{ opacity: 0, y: 10, scale: 0.8 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.8 }}
+              className="absolute bottom-full mb-4 z-[60] bg-white shadow-2xl rounded-[2rem] p-3 border-4 border-sky-100 flex gap-3"
               onClick={(e) => e.stopPropagation()}
             >
-              <button onClick={() => { onStatusChange(student.id, 'green'); setIsOptionsOpen(false); }} className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center hover:scale-110 shadow-sm"><Check size={14} /></button>
-              <button onClick={() => { onStatusChange(student.id, 'yellow'); setIsOptionsOpen(false); }} className="w-8 h-8 rounded-full bg-amber-400 text-white flex items-center justify-center hover:scale-110 shadow-sm"><AlertTriangle size={14} /></button>
-              <button onClick={() => { onStatusChange(student.id, 'red'); setIsOptionsOpen(false); }} className="w-8 h-8 rounded-full bg-rose-500 text-white flex items-center justify-center hover:scale-110 shadow-sm"><X size={14} /></button>
-              <div className="w-px bg-gray-200 mx-1" />
-              <button onClick={() => { onStatusChange(student.id, 'excellence'); setIsOptionsOpen(false); }} className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center hover:scale-110 shadow-sm"><Trophy size={14} /></button>
-              <button onClick={() => { onStatusChange(student.id, 'helper'); setIsOptionsOpen(false); }} className="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center hover:scale-110 shadow-sm"><HandHelping size={14} /></button>
-              <div className="w-px bg-gray-200 mx-1" />
-              <button onClick={() => { onDelete(student.id); setIsOptionsOpen(false); }} className="w-8 h-8 rounded-full bg-gray-100 text-red-500 flex items-center justify-center hover:bg-red-50 shadow-sm"><Trash2 size={14} /></button>
+              <button title="Bem comportado" onClick={() => { onStatusChange(student.id, 'green'); setIsOptionsOpen(false); }} className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center hover:scale-110 shadow-lg transition-transform active:scale-95"><Check size={20} strokeWidth={3} /></button>
+              <button title="Atenção" onClick={() => { onStatusChange(student.id, 'yellow'); setIsOptionsOpen(false); }} className="w-10 h-10 rounded-full bg-amber-400 text-white flex items-center justify-center hover:scale-110 shadow-lg transition-transform active:scale-95"><AlertTriangle size={20} strokeWidth={3} /></button>
+              <button title="Pare / Saída" onClick={() => { onStatusChange(student.id, 'red'); setIsOptionsOpen(false); }} className="w-10 h-10 rounded-full bg-rose-500 text-white flex items-center justify-center hover:scale-110 shadow-lg transition-transform active:scale-95"><X size={20} strokeWidth={3} /></button>
+              <div className="w-0.5 bg-gray-100 mx-1 rounded-full" />
+              <button title="Excedeu limites / Ganhou Corrida" onClick={() => { onStatusChange(student.id, 'excellence'); setIsOptionsOpen(false); }} className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center hover:scale-110 shadow-lg transition-transform active:scale-95"><Trophy size={18} strokeWidth={3} /></button>
+              <button title="Ajudante do Dia" onClick={() => { onStatusChange(student.id, 'helper'); setIsOptionsOpen(false); }} className="w-10 h-10 rounded-full bg-purple-500 text-white flex items-center justify-center hover:scale-110 shadow-lg transition-transform active:scale-95"><HandHelping size={18} strokeWidth={3} /></button>
+              <div className="w-0.5 bg-gray-100 mx-1 rounded-full" />
+              <button title="Remover Piloto" onClick={() => { if(confirm('Excluir piloto?')) onDelete(student.id); setIsOptionsOpen(false); }} className="w-10 h-10 rounded-full bg-slate-100 text-rose-500 flex items-center justify-center hover:bg-rose-50 shadow-lg transition-transform active:scale-95"><Trash2 size={18} strokeWidth={3} /></button>
             </motion.div>
           </>
         )}
@@ -203,6 +304,7 @@ const StudentCar = ({
   );
 };
 
+
 export default function App() {
   const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState<Student[]>([]);
@@ -210,15 +312,20 @@ export default function App() {
   const [selectedClassId, setSelectedClassId] = useState<string>(() => {
     return localStorage.getItem('semaforo_selected_class') || 'all';
   });
+  const [selectedSeries, setSelectedSeries] = useState<string>('all');
   const [isSaving, setIsSaving] = useState(false);
   const [showClassesModal, setShowClassesModal] = useState(false);
   const [showBulkAdd, setShowBulkAdd] = useState(false);
+  const [showHelpersArea, setShowHelpersArea] = useState(false);
   const [bulkAddSuccess, setBulkAddSuccess] = useState(false);
   const [newName, setNewName] = useState('');
   const [newColor, setNewColor] = useState(CAR_COLORS[3].value);
   const [bulkText, setBulkText] = useState('');
   const [bulkClassName, setBulkClassName] = useState('');
+  const [bulkSeries, setBulkSeries] = useState('');
+  const [newClassSeries, setNewClassSeries] = useState('');
   const [showAlert, setShowAlert] = useState<{name: string} | null>(null);
+  const [globalError, setGlobalError] = useState<string | null>(null);
 
   // Firestore Sync
   useEffect(() => {
@@ -274,13 +381,16 @@ export default function App() {
       name: newName,
       classId: selectedClassId,
       status: 'green',
-      carColor: newColor
+      carColor: newColor,
+      updatedAt: serverTimestamp()
     };
     
     try {
       await setDoc(doc(db, 'students', id), newStudent);
       setNewName('');
+      setGlobalError(null);
     } catch (err) {
+      setGlobalError("Erro ao salvar piloto. Verifique a conexão.");
       handleFirestoreError(err, OperationType.WRITE, `students/${id}`);
     } finally {
       setIsSaving(false);
@@ -288,49 +398,74 @@ export default function App() {
   };
 
   const handleBulkAdd = async () => {
-    if (!bulkText.trim() || !bulkClassName.trim()) return;
+    const classNameClean = bulkClassName.trim();
+    const seriesClean = bulkSeries.trim() || 'Geral';
+    const textClean = bulkText.trim();
+
+    if (!classNameClean) {
+      setGlobalError("Por favor, digite o nome da turma.");
+      return;
+    }
+    if (!textClean) {
+      setGlobalError("Por favor, cole a lista de nomes dos alunos.");
+      return;
+    }
     
     setIsSaving(true);
+    setGlobalError(null);
+    
     try {
       const batch = writeBatch(db);
       let targetClassId = '';
-      const existingClass = classes.find(c => c.name.toLowerCase() === bulkClassName.trim().toLowerCase());
+      
+      const existingClass = classes.find(c => 
+        c.name.toLowerCase() === classNameClean.toLowerCase() && 
+        (c.series?.toLowerCase() === seriesClean.toLowerCase())
+      );
       
       if (existingClass) {
         targetClassId = existingClass.id;
       } else {
         targetClassId = generateId();
-        const newClass = { id: targetClassId, name: bulkClassName.trim() };
+        const newClass = { 
+          id: targetClassId, 
+          name: classNameClean, 
+          series: seriesClean,
+          updatedAt: serverTimestamp()
+        };
         batch.set(doc(db, 'classes', targetClassId), newClass);
       }
 
-      const names = bulkText.split(/[\n,]/).map(n => n.trim()).filter(n => n.length > 0);
+      const names = textClean.split(/[\n,]/).map(n => n.trim()).filter(n => n.length > 0);
+      
+      if (names.length === 0) {
+        throw new Error("Nenhum nome válido encontrado na lista.");
+      }
+
       names.forEach(name => {
         const studentId = generateId();
         batch.set(doc(db, 'students', studentId), {
           id: studentId,
-          name,
+          name: name,
           classId: targetClassId,
           status: 'green',
-          carColor: CAR_COLORS[Math.floor(Math.random() * CAR_COLORS.length)].value
+          carColor: CAR_COLORS[Math.floor(Math.random() * CAR_COLORS.length)].value,
+          updatedAt: serverTimestamp()
         });
       });
-      
+
       await batch.commit();
       
-      // Success feedback
-      setSelectedClassId(targetClassId);
       setBulkText('');
       setBulkClassName('');
-      setBulkAddSuccess(true);
+      setBulkSeries('');
+      setSelectedSeries(seriesClean);
+      setSelectedClassId(targetClassId);
+      setShowBulkAdd(false);
       
-      // Wait for the UI to feel "confirmed"
-      setTimeout(() => {
-        setBulkAddSuccess(false);
-        setShowBulkAdd(false);
-      }, 1500);
     } catch (err) {
-      handleFirestoreError(err, OperationType.WRITE, 'batch-bulk-add');
+      console.error("Erro no Bulk Add:", err);
+      setGlobalError("Falha ao salvar. Verifique se preencheu tudo corretamente.");
     } finally {
       setIsSaving(false);
     }
@@ -383,12 +518,22 @@ export default function App() {
     }
   };
 
-  const addClass = async (name: string) => {
-    if (!name.trim()) return;
+  const addClass = async (name: string, series: string) => {
+    if (!name.trim()) {
+      setGlobalError("Nome da turma é obrigatório.");
+      return;
+    }
+    const finalSeries = series.trim() || 'Geral';
     setIsSaving(true);
     const id = generateId();
     try {
-      await setDoc(doc(db, 'classes', id), { id, name: name.trim() });
+      await setDoc(doc(db, 'classes', id), { 
+        id, 
+        name: name.trim(), 
+        series: finalSeries,
+        updatedAt: serverTimestamp()
+      });
+      setGlobalError(null);
     } catch (err) {
       handleFirestoreError(err, OperationType.WRITE, `classes/${id}`);
     } finally {
@@ -418,9 +563,25 @@ export default function App() {
     }
   };
 
-  const currentStudents = useMemo(() => 
-    selectedClassId === 'all' ? students : students.filter(s => s.classId === selectedClassId)
-  , [students, selectedClassId]);
+  const seriesList = useMemo(() => {
+    const s = new Set<string>();
+    classes.forEach(c => {
+      if (c.series) s.add(c.series);
+    });
+    return Array.from(s).sort();
+  }, [classes]);
+
+  const currentStudents = useMemo(() => {
+    let filtered = students;
+    if (selectedSeries !== 'all') {
+      const classIdsInSeries = classes.filter(c => c.series === selectedSeries).map(c => c.id);
+      filtered = filtered.filter(s => classIdsInSeries.includes(s.classId));
+    }
+    if (selectedClassId !== 'all') {
+      filtered = filtered.filter(s => s.classId === selectedClassId);
+    }
+    return filtered.sort((a, b) => a.name.localeCompare(b.name));
+  }, [students, selectedClassId, selectedSeries, classes]);
 
   const grouped = {
     green: currentStudents.filter(s => s.status === 'green'),
@@ -432,61 +593,74 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-8 overflow-hidden">
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-8 overflow-hidden">
+        {/* Animated Background Atmosphere */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 blur-[120px] rounded-full animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 blur-[120px] rounded-full animate-pulse delay-700" />
+        </div>
+
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="relative w-full max-w-md h-48 flex flex-col justify-center items-center gap-6"
+          className="relative w-full max-w-2xl h-64 flex flex-col justify-center items-center gap-12"
         >
-          {/* Race Track Lines */}
-          <div className="absolute inset-0 flex flex-col justify-around opacity-10">
-            <div className="h-0.5 w-[200%] bg-white border-t-2 border-dashed border-white animate-[move-track_2s_linear_infinite]" />
-            <div className="h-0.5 w-[200%] bg-white border-t-2 border-dashed border-white animate-[move-track_2s_linear_infinite_reverse]" />
+          {/* Race Track */}
+          <div className="absolute inset-0 bg-slate-900 rounded-[3rem] border-y-8 border-slate-800 shadow-2xl overflow-hidden flex flex-col justify-center">
+            {/* Guard Rails */}
+            <div className="absolute top-0 left-0 right-0 h-4 bg-red-600 bg-[linear-gradient(90deg,#fff_50%,transparent_50%)] bg-[length:40px_100%] opacity-40" />
+            <div className="absolute bottom-0 left-0 right-0 h-4 bg-red-600 bg-[linear-gradient(90deg,#fff_50%,transparent_50%)] bg-[length:40px_100%] opacity-40" />
+            
+            {/* Lane Markers */}
+            <div className="h-1 w-[200%] bg-white/20 border-t-4 border-dashed border-white/20 animate-[move-track_1s_linear_infinite]" />
           </div>
 
-          <div className="flex gap-4 items-end mb-4">
-            {[
-              { color: "#ef4444", delay: 0 },
-              { color: "#10b981", delay: 0.2 },
-              { color: "#3b82f6", delay: 0.4 },
-              { color: "#f59e0b", delay: 0.1 }
-            ].map((config, i) => (
-              <motion.div
-                key={i}
-                animate={{ 
-                  x: [-20, 20, -20],
-                  y: [0, -10, 0],
-                  rotate: [0, 5, -5, 0]
-                }}
-                transition={{ 
-                  duration: 0.6, 
-                  repeat: Infinity, 
-                  delay: config.delay,
-                  ease: "easeInOut"
-                }}
-                style={{ color: config.color }}
-              >
-                <Car size={48} fill={config.color} fillOpacity={0.2} strokeWidth={3} />
-              </motion.div>
-            ))}
+          {/* Car Racing Through */}
+          <div className="relative z-10 w-full flex justify-center">
+             <motion.div
+               animate={{ 
+                 x: [-100, 100],
+                 y: [0, -5, 5, 0],
+                 rotate: [0, 2, -2, 0]
+               }}
+               transition={{ 
+                 x: { duration: 2, repeat: Infinity, ease: "linear" },
+                 y: { duration: 0.5, repeat: Infinity, ease: "easeInOut" },
+                 rotate: { duration: 0.4, repeat: Infinity, ease: "easeInOut" }
+               }}
+             >
+                <RacingCar color="#ef4444" size={120} />
+             </motion.div>
           </div>
 
           <div className="text-center z-10">
-            <motion.p 
-              animate={{ opacity: [0.4, 1, 0.4] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-              className="text-sky-400 font-black text-2xl uppercase italic tracking-[0.3em]"
+            <motion.div 
+              animate={{ opacity: [0.6, 1, 0.6], y: [0, -2, 0] }}
+              transition={{ duration: 1, repeat: Infinity }}
+              className="flex flex-col items-center gap-2"
             >
-              Aquecendo Motores...
-            </motion.p>
-            <p className="text-slate-500 font-bold text-[10px] uppercase tracking-widest mt-2">Sincronizando com o Grid de Largada</p>
+              <h2 className="text-white font-black text-4xl uppercase italic tracking-[0.2em] drop-shadow-2xl flex items-center gap-4">
+                <span className="text-sky-400">Motores</span> Ligados!
+              </h2>
+              <div className="flex gap-1 mt-2">
+                 {[...Array(3)].map((_, i) => (
+                   <motion.div 
+                    key={i}
+                    animate={{ scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }}
+                    transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.2 }}
+                    className="w-2 h-2 rounded-full bg-sky-400"
+                   />
+                 ))}
+              </div>
+            </motion.div>
+            <p className="text-slate-500 font-bold text-xs uppercase tracking-[0.4em] mt-6 opacity-60">Sincronizando com o Grid de Largada</p>
           </div>
         </motion.div>
 
         <style>{`
           @keyframes move-track {
             0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
+            100% { transform: translateX(-50px); }
           }
         `}</style>
       </div>
@@ -502,14 +676,29 @@ export default function App() {
             <h1 className="text-2xl font-black text-sky-600 tracking-tight flex items-center gap-3">
               <span className="text-3xl">🏎️</span> SEMÁFORO DA TURMINHA
             </h1>
-            <div className="flex items-center gap-3 mt-1">
+            <div className="flex items-center gap-3 mt-1 flex-wrap">
+              <select 
+                value={selectedSeries}
+                onChange={(e) => {
+                  setSelectedSeries(e.target.value);
+                  setSelectedClassId('all');
+                }}
+                className="bg-purple-50 px-3 py-1.5 rounded-xl border-2 border-purple-200 outline-none text-xs font-black text-purple-700 cursor-pointer hover:bg-purple-100 transition-colors shadow-sm"
+              >
+                <option value="all">Filtro por Série: Todas</option>
+                {seriesList.map(s => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
               <select 
                 value={selectedClassId}
                 onChange={(e) => setSelectedClassId(e.target.value)}
                 className="bg-sky-50 px-3 py-1.5 rounded-xl border-2 border-sky-200 outline-none text-xs font-black text-sky-700 cursor-pointer hover:bg-sky-100 transition-colors shadow-sm"
               >
-                <option value="all">Ver Todas as Turmas</option>
-                {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                <option value="all">Escolher Turma: Todas</option>
+                {classes.filter(c => selectedSeries === 'all' || c.series === selectedSeries).map(c => (
+                  <option key={c.id} value={c.id}>{c.name} {c.series ? `(${c.series})` : ''}</option>
+                ))}
               </select>
               <button 
                 onClick={() => setShowClassesModal(true)}
@@ -527,6 +716,15 @@ export default function App() {
                   Salvando...
                 </motion.span>
               )}
+              {globalError && (
+                <motion.span 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-[8px] font-black text-rose-500 uppercase tracking-widest"
+                >
+                  {globalError}
+                </motion.span>
+              )}
             </div>
           </div>
           
@@ -534,6 +732,13 @@ export default function App() {
             <div className="bg-amber-100 px-6 py-2 rounded-2xl border-2 border-amber-300 hidden sm:block">
               <span className="text-amber-700 font-bold text-lg">Pilotos: {currentStudents.length}</span>
             </div>
+
+            <button 
+              onClick={() => setShowHelpersArea(true)}
+              className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl text-sm font-black flex items-center gap-2 shadow-md transition-all active:scale-95 border-b-4 border-purple-700"
+            >
+              <HandHelping size={18} /> Área dos Ajudantes
+            </button>
 
             <button 
               onClick={() => setShowBulkAdd(true)}
@@ -724,25 +929,39 @@ export default function App() {
               <div className="space-y-3 max-h-[300px] overflow-y-auto mb-8 pr-2 custom-scrollbar">
                 {classes.map(c => (
                   <div key={c.id} className="flex items-center justify-between bg-sky-50 p-4 rounded-2xl border-2 border-sky-100 group">
-                    <span className="font-black text-sky-700 tracking-tight">{c.name}</span>
+                    <div className="flex flex-col">
+                      <span className="font-black text-sky-700 tracking-tight">{c.name}</span>
+                      <span className="text-[10px] text-sky-400 font-bold uppercase">{c.series}</span>
+                    </div>
                     <button onClick={() => deleteClass(c.id)} className="text-rose-400 opacity-0 group-hover:opacity-100 hover:text-rose-600 transition-all p-1"><Trash2 size={16}/></button>
                   </div>
                 ))}
               </div>
 
-              <div className="pt-6 border-t-2 border-gray-100">
+              <div className="pt-6 border-t-2 border-gray-100 space-y-3">
+                <div className="space-y-1">
+                  <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest px-1">Série/Ano:</label>
+                  <input 
+                    type="text" 
+                    placeholder="Ex: 1º Ano..." 
+                    value={newClassSeries}
+                    onChange={(e) => setNewClassSeries(e.target.value)}
+                    className="w-full bg-gray-50 px-4 py-2 rounded-xl border-2 border-transparent focus:border-sky-400 outline-none text-xs font-black"
+                  />
+                </div>
                 <div className="flex gap-2">
                   <input 
                     type="text" 
-                    placeholder="Ex: 1º Ano A..." 
+                    placeholder="Nome da Turma..." 
                     id="new-class-input"
                     className="flex-1 bg-gray-50 px-4 py-3 rounded-2xl border-2 border-transparent focus:border-sky-400 outline-none text-xs font-black"
                   />
                   <button 
                     onClick={() => {
                       const input = document.getElementById('new-class-input') as HTMLInputElement;
-                      addClass(input.value);
+                      addClass(input.value, newClassSeries);
                       input.value = '';
+                      setNewClassSeries('');
                     }}
                     className="bg-sky-500 text-white p-3 rounded-2xl hover:bg-sky-600 transition-all shadow-md"
                   >
@@ -768,66 +987,161 @@ export default function App() {
               <h2 className="text-2xl font-black text-indigo-900 uppercase italic mb-2">Importar Turma Inteira</h2>
               <p className="text-gray-500 text-[10px] font-bold mb-8 uppercase tracking-widest">Adicione os nomes (um por linha) e escolha a turma.</p>
               
-              {bulkAddSuccess ? (
-                <motion.div 
-                  initial={{ scale: 0.5, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  className="flex flex-col items-center justify-center py-20 gap-4"
-                >
-                  <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-xl">
-                    <Check size={48} strokeWidth={4} />
-                  </div>
-                  <p className="text-emerald-600 font-black uppercase italic tracking-widest text-xl">Pilotos na Pista!</p>
-                </motion.div>
-              ) : (
-                <div className="space-y-6">
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">Nome da Turma:</label>
-                  <input 
-                    type="text"
-                    placeholder="Ex: 1ºA, 2ºB..."
-                    value={bulkClassName}
-                    onChange={(e) => setBulkClassName(e.target.value)}
-                    className="w-full bg-slate-50 px-6 py-4 rounded-2xl border-2 border-indigo-100 outline-none font-black text-indigo-700 shadow-inner"
-                  />
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">Série/Ano (Ex: 1º Ano):</label>
+                    <input 
+                      type="text"
+                      placeholder="Ex: 1º Ano Junior..."
+                      value={bulkSeries}
+                      onChange={(e) => setBulkSeries(e.target.value)}
+                      className="w-full bg-slate-50 px-6 py-4 rounded-2xl border-2 border-indigo-100 outline-none font-black text-indigo-700 shadow-inner"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">Turma/Identificação (Ex: A):</label>
+                    <input 
+                      type="text"
+                      placeholder="Ex: Turma A, 101..."
+                      value={bulkClassName}
+                      onChange={(e) => setBulkClassName(e.target.value)}
+                      className="w-full bg-slate-50 px-6 py-4 rounded-2xl border-2 border-indigo-100 outline-none font-black text-indigo-700 shadow-inner"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">Lista de Nomes:</label>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">Nomes Completos (um por linha):</label>
                   <textarea 
                     rows={6}
-                    placeholder="Ex: João Silva, Maria Oliveira, Pedro Santos..."
+                    placeholder="João Silva&#10;Maria Oliveira&#10;Pedro Santos..."
                     value={bulkText}
                     onChange={(e) => setBulkText(e.target.value)}
                     className="w-full bg-slate-50 p-6 rounded-[2rem] border-2 border-transparent focus:border-indigo-400 outline-none text-sm font-black shadow-inner resize-none custom-scrollbar"
                   />
                 </div>
 
-                <div className="flex gap-3 pt-4">
-                  <button onClick={() => setShowBulkAdd(false)} className="flex-1 bg-gray-100 text-gray-500 py-4 rounded-2xl font-black uppercase tracking-[0.2em] hover:bg-gray-200 transition-all italic">Cancelar</button>
+                <div className="flex gap-4 pt-4">
+                  <button 
+                    onClick={() => {
+                      setShowBulkAdd(false);
+                      setGlobalError(null);
+                    }} 
+                    className="flex-1 bg-slate-100 text-slate-500 py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-200 transition-all border-b-4 border-slate-300 active:border-b-0 active:translate-y-1 shadow-sm"
+                  >
+                    CANCELAR
+                  </button>
                   <button 
                     onClick={handleBulkAdd}
-                    disabled={!bulkText.trim() || !bulkClassName.trim() || isSaving}
-                    className="flex-1 bg-indigo-600 text-white py-4 rounded-2xl font-black uppercase tracking-[0.2em] shadow-xl hover:bg-indigo-700 transition-all disabled:opacity-50 italic flex items-center justify-center gap-2"
+                    disabled={isSaving}
+                    className="flex-1 bg-emerald-500 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg hover:bg-emerald-600 transition-all disabled:opacity-50 border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1 flex items-center justify-center gap-2"
                   >
                     {isSaving ? (
                       <>
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                        >
-                          <Settings size={20} />
-                        </motion.div>
-                        PROCESSANDO...
+                        <div className="w-5 h-5 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+                        SALVANDO...
                       </>
                     ) : (
-                      'LARGADA! 🏁'
+                      'OK, ADICIONAR TURMA! ✅'
                     )}
                   </button>
                 </div>
               </div>
-            )}
-          </motion.div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Helpers Area Modal */}
+      <AnimatePresence>
+        {showHelpersArea && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-purple-900/80 backdrop-blur-sm">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-[3rem] p-8 max-w-5xl w-full h-[90vh] shadow-2xl border-8 border-purple-100 flex flex-col"
+            >
+              <div className="flex justify-between items-center mb-8">
+                <div>
+                  <h2 className="text-3xl font-black text-purple-900 uppercase italic leading-none">Área dos Ajudantes</h2>
+                  <p className="text-gray-500 text-[10px] font-bold mt-2 uppercase tracking-widest">Gerencie as listas de todas as turmas separadas por série.</p>
+                </div>
+                <button onClick={() => setShowHelpersArea(false)} className="p-3 hover:bg-purple-50 rounded-full transition-colors text-purple-400 border-2 border-purple-50">
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar space-y-12">
+                {(Object.entries(
+                  classes.reduce((acc, c) => {
+                    const series = c.series || "Outros";
+                    if (!acc[series]) acc[series] = [];
+                    acc[series].push(c);
+                    return acc;
+                  }, {} as Record<string, ClassGroup[]>)
+                ) as [string, ClassGroup[]][]).sort((a, b) => a[0].localeCompare(b[0])).map(([series, seriesClasses]) => (
+                  <div key={series} className="space-y-6">
+                    <div className="flex items-center gap-4">
+                      <h3 className="text-2xl font-black text-purple-600 uppercase italic tracking-tighter">{series}</h3>
+                      <div className="h-1 flex-1 bg-purple-50 rounded-full" />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                      {seriesClasses.map(cls => (
+                        <div key={cls.id} className="bg-slate-50 rounded-3xl p-6 border-2 border-slate-100 shadow-sm hover:shadow-md transition-all">
+                          <div className="flex justify-between items-center mb-4">
+                            <h4 className="font-black text-slate-800 uppercase italic">{cls.name}</h4>
+                            <span className="bg-slate-200 text-slate-600 text-[8px] font-black px-2 py-1 rounded-full">{students.filter(s => s.classId === cls.id).length} Pilotos</span>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            {students.filter(s => s.classId === cls.id).sort((a, b) => a.name.localeCompare(b.name)).map(student => (
+                              <div key={student.id} className="flex items-center gap-3 group bg-white p-2 rounded-xl border border-slate-200">
+                                <RacingCar color={student.carColor} size={32} />
+                                <input 
+                                  type="text"
+                                  defaultValue={student.name}
+                                  onBlur={async (e) => {
+                                    if (e.target.value !== student.name) {
+                                      try {
+                                        await updateDoc(doc(db, 'students', student.id), { name: e.target.value });
+                                      } catch (err) {
+                                        handleFirestoreError(err, OperationType.UPDATE, `students/${student.id}`);
+                                      }
+                                    }
+                                  }}
+                                  className="flex-1 bg-transparent border border-transparent focus:border-purple-300 rounded-lg px-2 py-1 text-xs font-bold text-slate-700 outline-none transition-all"
+                                />
+                                <button 
+                                  onClick={() => deleteStudent(student.id)}
+                                  className="text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all p-1"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </div>
+                            ))}
+                            {students.filter(s => s.classId === cls.id).length === 0 && (
+                              <p className="text-[10px] text-slate-400 font-bold italic text-center py-4 uppercase">
+                                Ninguém no grid ainda...
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                
+                {classes.length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-20 text-center opacity-40">
+                    <Users size={64} className="text-purple-300 mb-4" />
+                    <p className="text-slate-500 font-black uppercase italic tracking-widest">Nenhuma turma cadastrada no grid.</p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
           </div>
         )}
       </AnimatePresence>
