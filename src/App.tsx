@@ -127,77 +127,100 @@ const RacingCar = ({ color = '#94a3b8', size = 32, className = "", showExhaust =
         viewBox="0 0 100 60" 
         fill="none" 
         xmlns="http://www.w3.org/2000/svg"
-        className="w-full h-full drop-shadow-xl"
+        className="w-full h-full drop-shadow-2xl"
       >
+        <defs>
+          <linearGradient id={`grad-${carColor.replace('#','')}`} x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="white" stopOpacity="0.3" />
+            <stop offset="50%" stopColor="white" stopOpacity="0" />
+            <stop offset="100%" stopColor="black" stopOpacity="0.2" />
+          </linearGradient>
+          <filter id="inner-shadow">
+            <feOffset dx="0" dy="2" />
+            <feGaussianBlur stdDeviation="2" result="offset-blur" />
+            <feComposite operator="out" in="SourceGraphic" in2="offset-blur" result="inverse" />
+            <feFlood floodColor="black" floodOpacity="0.3" result="color" />
+            <feComposite operator="in" in="color" in2="inverse" result="shadow" />
+            <feComponentTransfer in="shadow" result="shadow">
+              <feFuncA type="linear" slope="0.5" />
+            </feComponentTransfer>
+            <feComposite operator="over" in="shadow" in2="SourceGraphic" />
+          </filter>
+        </defs>
+
         {/* Shadow under car */}
-        <ellipse cx="50" cy="55" rx="40" ry="4" fill="rgba(0,0,0,0.15)" />
+        <ellipse cx="50" cy="55" rx="42" ry="5" fill="rgba(0,0,0,0.2)" />
         
+        {/* Rear Wing (Aerofólio) */}
+        <path d="M5 25 L25 25 L20 35 L10 35 Z" fill={carColor} filter="brightness(0.6)" />
+        <rect x="8" y="35" width="2" height="8" fill={carColor} filter="brightness(0.5)" />
+        <rect x="20" y="35" width="2" height="8" fill={carColor} filter="brightness(0.5)" />
+
         {/* Main Body */}
         <path 
-          d="M10 40C10 40 15 20 50 20C85 20 90 40 90 40L95 45L90 50H10L5 45L10 40Z" 
+          d="M10 40C10 40 18 20 55 20C88 20 92 38 95 42C98 46 95 52 90 52H15C10 52 5 48 10 40Z" 
           fill={carColor} 
+          filter="url(#inner-shadow)"
         />
-        {/* Side Stripes */}
-        <path d="M20 35H80" stroke="white" strokeWidth="2" strokeOpacity="0.2" />
         
-        {/* Cabin/Windows */}
+        {/* Side Detail Overlay */}
         <path 
-          d="M35 25C35 25 40 15 55 15C70 15 75 25 75 25" 
-          stroke="rgba(255,255,255,0.6)" 
-          strokeWidth="4" 
-          strokeLinecap="round" 
+          d="M25 40 Q50 35 85 45" 
+          stroke="white" 
+          strokeWidth="3" 
+          strokeOpacity="0.1" 
+          fill="none" 
+          strokeLinecap="round"
+        />
+        
+        {/* Cockpit / Glass */}
+        <path 
+          d="M45 22C45 22 50 14 65 14C80 14 85 22 85 22" 
+          fill="rgba(15, 23, 42, 0.8)" 
         />
         <path 
-          d="M40 25C40 25 43 18 55 18C67 18 70 25 70 25" 
-          fill="rgba(0,0,0,0.4)" 
+          d="M48 22C48 22 52 16 65 16C78 16 82 22 82 22" 
+          fill="rgba(56, 189, 248, 0.2)" 
         />
         
-        {/* Spoiler */}
-        <rect x="2" y="30" width="18" height="4" rx="2" fill={carColor} filter="brightness(0.7)" />
-        <path d="M8 34L8 40" stroke={carColor} strokeWidth="2" filter="brightness(0.7)" />
-        <path d="M14 34L14 40" stroke={carColor} strokeWidth="2" filter="brightness(0.7)" />
-        
+        {/* Body Shine */}
+        <path d="M55 20C80 20 90 35 90 35" stroke="white" strokeWidth="2" strokeOpacity="0.2" strokeLinecap="round" />
+
         {/* Wheels */}
-        <circle cx="25" cy="50" r="9" fill="#0f172a" />
-        <circle cx="25" cy="50" r="5" fill="#94a3b8" />
-        <circle cx="75" cy="50" r="9" fill="#0f172a" />
-        <circle cx="75" cy="50" r="5" fill="#94a3b8" />
-        
-        {/* Wheels spinning effect */}
-        <circle cx="25" cy="50" r="7" stroke="white" strokeWidth="1" strokeOpacity="0.3" strokeDasharray="4 4" />
-        <circle cx="75" cy="50" r="7" stroke="white" strokeWidth="1" strokeOpacity="0.3" strokeDasharray="4 4" />
-        
-        {/* Highlights */}
-        <path d="M35 22C45 22 55 22 65 22" stroke="white" strokeWidth="1" strokeOpacity="0.4" strokeLinecap="round" />
+        <circle cx="26" cy="50" r="8" fill="#0f172a" />
+        <circle cx="26" cy="50" r="4" fill="#94a3b8" />
+        <circle cx="74" cy="50" r="8" fill="#0f172a" />
+        <circle cx="74" cy="50" r="4" fill="#94a3b8" />
         
         {/* Headlights */}
-        <rect x="88" y="38" width="6" height="4" rx="2" fill="#fbbf24" opacity={0.9} />
+        <path d="M92 40 Q96 40 96 44 L92 46 Z" fill="#fbbf24" filter="drop-shadow(0 0 4px #fbbf24)" />
       </svg>
+      
       {/* Light Glow */}
       <div 
-        className="absolute top-1/2 -right-4 -translate-y-1/2 w-12 h-12 bg-yellow-400/10 blur-xl rounded-full opacity-50"
+        className="absolute top-1/2 -right-4 -translate-y-1/2 w-16 h-16 bg-yellow-400/20 blur-2xl rounded-full opacity-60"
       />
       
       {/* Exhaust Smoke */}
       {showExhaust && (
-        <div className="absolute -left-4 top-1/2 -translate-y-1/2 flex gap-1">
-          {[...Array(3)].map((_, i) => (
+        <div className="absolute -left-6 top-[70%] -translate-y-1/2 flex gap-1">
+          {[...Array(4)].map((_, i) => (
             <motion.div 
               key={i}
-              initial={{ scale: 0, opacity: 0.8, x: 0 }}
+              initial={{ scale: 0, opacity: 1, x: 0, y: 0 }}
               animate={{ 
-                scale: [0, 1.5, 2], 
-                opacity: [0.8, 0.4, 0], 
-                x: [-10, -20, -30],
-                y: [0, -5, 5]
+                scale: [0.5, 1.8, 2.5], 
+                opacity: [1, 0.4, 0], 
+                x: [-15, -35, -55],
+                y: [0, -10, 5]
               }}
               transition={{ 
-                duration: 0.8, 
+                duration: 1, 
                 repeat: Infinity, 
-                delay: i * 0.2,
+                delay: i * 0.25,
                 ease: "easeOut"
               }}
-              className="w-2 h-2 rounded-full bg-slate-300/40"
+              className="w-3 h-3 rounded-full bg-slate-300/40 backdrop-blur-[2px]"
             />
           ))}
         </div>
@@ -304,7 +327,7 @@ const StudentCar = ({
               <button title="Ajudante do Dia" onClick={() => { onStatusChange(student.id, 'helper'); setIsOptionsOpen(false); }} className="w-10 h-10 rounded-full bg-purple-500 text-white flex items-center justify-center hover:scale-110 shadow-lg transition-transform active:scale-95"><HandHelping size={18} strokeWidth={3} /></button>
               <div className="w-0.5 bg-gray-100 mx-1 rounded-full" />
               <button 
-                title="Remover Piloto" 
+                title="Remover Estudante" 
                 disabled={isSaving}
                 onClick={() => setConfirmDelete(!confirmDelete)} 
                 className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-95 disabled:opacity-50 ${confirmDelete ? 'bg-rose-600 text-white' : 'bg-slate-100 text-rose-500 hover:bg-rose-50'}`}
@@ -401,7 +424,7 @@ export default function App() {
       checkDone();
     }, (err) => {
       console.error("Firestore Students Error:", err);
-      setGlobalError("Erro ao carregar pilotos.");
+      setGlobalError("Erro ao carregar estudantes.");
       studentsDone = true;
       checkDone();
     });
@@ -433,7 +456,7 @@ export default function App() {
       setNewName('');
       setGlobalError(null);
     } catch (err) {
-      setGlobalError("Erro ao salvar piloto. Verifique a conexão.");
+      setGlobalError("Erro ao salvar estudante. Verifique a conexão.");
       handleFirestoreError(err, OperationType.WRITE, `students/${id}`);
     } finally {
       setIsSaving(false);
@@ -544,8 +567,8 @@ export default function App() {
       setGlobalError(null);
       await deleteDoc(doc(db, 'students', id));
     } catch (err: any) {
-      console.error("Erro ao excluir piloto:", err);
-      setGlobalError("Erro ao remover piloto. Tente novamente.");
+      console.error("Erro ao excluir estudante:", err);
+      setGlobalError("Erro ao remover estudante. Tente novamente.");
       handleFirestoreError(err, OperationType.DELETE, `students/${id}`);
     } finally {
       setIsSaving(false);
@@ -763,7 +786,7 @@ export default function App() {
                  ))}
               </div>
             </motion.div>
-            <p className="text-slate-500 font-bold text-xs uppercase tracking-[0.4em] mt-6 opacity-60">Sincronizando com o Grid de Largada</p>
+            <p className="text-slate-500 font-bold text-xs uppercase tracking-[0.4em] mt-6 opacity-60">Sincronizando a Sala de Aula</p>
           </div>
         </motion.div>
 
@@ -840,7 +863,7 @@ export default function App() {
           
           <div className="flex flex-wrap items-center gap-4">
             <div className="bg-amber-100 px-6 py-2 rounded-2xl border-2 border-amber-300 hidden sm:block">
-              <span className="text-amber-700 font-bold text-lg">Pilotos: {currentStudents.length}</span>
+              <span className="text-amber-700 font-bold text-lg">Estudantes: {currentStudents.length}</span>
             </div>
 
             <button 
@@ -897,14 +920,14 @@ export default function App() {
                   <HandHelping size={32} className="text-white" />
                 </div>
                 <div className="flex flex-col">
-                  <h2 className="text-purple-300 font-black text-3xl uppercase tracking-tighter italic leading-none">Ajudantes do Dia</h2>
-                  <p className="text-purple-400/60 text-xs font-black mt-2 uppercase tracking-widest italic">Os Pilotos de Ouro da Largada</p>
+                  <h2 className="text-purple-300 font-black text-3xl uppercase tracking-tighter italic leading-none">Ajudantes da Turma</h2>
+                  <p className="text-purple-400/60 text-xs font-black mt-2 uppercase tracking-widest italic">Os Destaques da Aula de Hoje</p>
                 </div>
               </div>
               
               <div className="flex items-center gap-3 bg-slate-800/50 px-6 py-3 rounded-2xl border border-slate-700/50 backdrop-blur-sm">
                 <div className="text-amber-400 animate-pulse">✨</div>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] italic">Grid de Largada</span>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] italic">Ordem de Atividades</span>
                 <div className="text-amber-400 animate-pulse">✨</div>
               </div>
             </div>
@@ -985,11 +1008,11 @@ export default function App() {
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
                 <p className="text-[10px] text-purple-300 font-black uppercase italic tracking-widest">
-                  ✨ Carros de Ouro: Prontos para a largada!
+                  ✨ Estrelas da Classe: Prontos para colaborar!
                 </p>
               </div>
               <p className="text-[9px] text-slate-500 font-bold uppercase tracking-tight italic">
-                🏁 Arraste para mudar a ordem de serviço
+                🏁 Arraste para mudar a ordem dos ajudantes
               </p>
             </div>
           </div>
@@ -1007,7 +1030,7 @@ export default function App() {
                 <div className="flex-1 flex flex-col gap-3 w-full relative z-10">
                   <div className="flex items-center gap-2 px-2">
                     <UserPlus size={14} className="text-sky-400" />
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Adicionar Novo Piloto no Grid:</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Novo Aluno na Sala:</label>
                   </div>
                   <input 
                     type="text" 
@@ -1018,7 +1041,7 @@ export default function App() {
                   />
                 </div>
                 <div className="flex flex-col gap-3 relative z-10 shrink-0">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Cor da Carroceria:</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Cor do Carro:</label>
                   <div className="p-3 bg-slate-50 rounded-[1.5rem] border border-slate-100">
                     <ColorPicker selected={newColor} onSelect={setNewColor} />
                   </div>
@@ -1028,14 +1051,14 @@ export default function App() {
                   disabled={!newName.trim() || isSaving}
                   className="bg-sky-500 hover:bg-sky-600 disabled:opacity-50 text-white px-10 py-5 rounded-[1.5rem] font-black shadow-lg hover:shadow-sky-200 transition-all active:scale-95 flex items-center gap-3 border-b-6 border-sky-700 self-stretch lg:self-end mt-4 lg:mt-0 relative z-10"
                 >
-                  <Plus size={28} strokeWidth={3} /> <span className="text-lg">ENTRAR NA PISTA</span>
+                  <Plus size={28} strokeWidth={3} /> <span className="text-lg">ENTRAR NA SALA</span>
                 </button>
               </form>
             ) : (
               <div className="bg-sky-100/50 p-8 rounded-[3rem] border-4 border-dashed border-sky-200 text-center flex flex-col items-center gap-4">
                 <Users size={32} className="text-sky-400" />
                 <p className="text-sky-600 font-black text-base uppercase italic tracking-[0.1em]">
-                  🚦 Selecione uma turma no cabeçalho para gerenciar os pilotos!
+                  🚦 Selecione uma turma no cabeçalho para gerenciar os alunos!
                 </p>
               </div>
             )}
@@ -1049,7 +1072,7 @@ export default function App() {
                     <div className="w-14 h-14 bg-emerald-500 rounded-2xl border-4 border-white shadow-[0_8px_0_0_rgb(16,185,129)] flex items-center justify-center text-white font-black italic text-2xl">1️</div>
                     <div>
                       <h2 className="font-black text-emerald-800 text-2xl uppercase italic tracking-tight leading-none">Pista Verde</h2>
-                      <p className="text-emerald-600/60 text-[10px] font-black mt-1 uppercase italic">Velocidade Máxima</p>
+                      <p className="text-emerald-600/60 text-[10px] font-black mt-1 uppercase italic">Estudantes Exemplares</p>
                     </div>
                   </div>
                   <Check size={24} className="text-emerald-500 opacity-30" />
@@ -1070,7 +1093,7 @@ export default function App() {
                 <div className="mt-auto space-y-4">
                   <div className="h-1 bg-emerald-200 w-full rounded-full opacity-50" />
                   <p className="text-[11px] text-emerald-700 font-extrabold uppercase text-center py-3 bg-emerald-50 rounded-[1.5rem] border-2 border-emerald-200 tracking-tight shadow-sm">
-                    ✨ Pilotos com Comportamento Exemplar!
+                    ✨ Estudantes com Comportamento Exemplar!
                   </p>
                 </div>
               </div>
@@ -1366,7 +1389,7 @@ export default function App() {
               </div>
               <h2 className="text-4xl font-black text-gray-900 mb-2 uppercase italic tracking-tighter">Bandeira Vermelha!</h2>
               <p className="text-xl font-black text-gray-600 mb-8 border-b-4 border-rose-50 pb-4 inline-block tracking-tight italic">
-                O piloto <span className="text-rose-600">{showAlert.name}</span> parou.
+                O estudante <span className="text-rose-600">{showAlert.name}</span> parou.
               </p>
               <div className="bg-rose-50 p-6 rounded-[2rem] mb-10 border-2 border-rose-100">
                 <p className="text-lg font-black text-gray-800 leading-tight uppercase underline decoration-rose-300 decoration-4">
@@ -1387,7 +1410,7 @@ export default function App() {
       {/* Helper Legend */}
       <footer className="mt-8 mb-4 max-w-7xl mx-auto px-8 flex flex-wrap justify-between items-center text-sky-600/60 font-black text-[10px] uppercase tracking-[0.2em] gap-4">
         <div className="flex items-center gap-2">
-          <span>🏁 Pilotando com Respeito e Atenção</span>
+          <span>🏁 Estudando com Respeito e Atenção</span>
           <span className="w-1 h-1 rounded-full bg-emerald-400"></span>
           <span className="text-[8px]">Nuvem Sincronizada</span>
         </div>
