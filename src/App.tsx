@@ -163,6 +163,19 @@ const RacingCar = ({ color = '#94a3b8', size = 32, className = "", showExhaust =
           filter="url(#inner-shadow)"
         />
         
+        {/* Door and Window Line */}
+        <path 
+          d="M35 48 L35 30 Q50 25 75 30 L75 48" 
+          stroke="black" 
+          strokeWidth="0.5" 
+          strokeOpacity="0.15" 
+          fill="none" 
+        />
+        
+        {/* Side Number Plate */}
+        <circle cx="55" cy="40" r="7" fill="white" fillOpacity="0.1" />
+        <text x="55" y="42" fontSize="6" fontWeight="900" fill="white" fillOpacity="0.2" textAnchor="middle" style={{ fontStyle: 'italic' }}>01</text>
+
         {/* Side Detail Overlay */}
         <path 
           d="M25 40 Q50 35 85 45" 
@@ -314,10 +327,10 @@ const StudentCar = ({
           <>
             <div className="fixed inset-0 z-50" onClick={(e) => { e.stopPropagation(); setIsOptionsOpen(false); }} />
             <motion.div 
-              initial={{ opacity: 0, y: 10, scale: 0.8 }}
+              initial={{ opacity: 0, y: -10, scale: 0.8 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.8 }}
-              className="absolute bottom-full mb-4 z-[60] bg-white shadow-2xl rounded-[2rem] p-3 border-4 border-sky-100 flex gap-3"
+              exit={{ opacity: 0, y: -10, scale: 0.8 }}
+              className="absolute top-full mt-3 z-[60] bg-white shadow-2xl rounded-[2rem] p-3 border-4 border-sky-100 flex gap-3 left-1/2 -translate-x-1/2 whitespace-nowrap"
               onClick={(e) => e.stopPropagation()}
             >
               <button title="Bem comportado" onClick={() => { onStatusChange(student.id, 'green'); setIsOptionsOpen(false); }} className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center hover:scale-110 shadow-lg transition-transform active:scale-95"><Check size={20} strokeWidth={3} /></button>
