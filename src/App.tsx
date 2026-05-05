@@ -882,197 +882,271 @@ export default function App() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 md:px-8 mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
+      <main className="max-w-7xl mx-auto px-4 md:px-8 mt-8 flex flex-col gap-8">
         
-        {/* ACTION PANEL */}
-        <div className="lg:col-span-8 flex flex-col gap-6">
-          
-          {/* Add Student Form */}
-          {selectedClassId !== 'all' ? (
-            <form onSubmit={addStudent} className="bg-white p-6 rounded-[2rem] border-4 border-sky-100 shadow-sm flex flex-col md:flex-row gap-6 items-center">
-              <div className="flex-1 flex flex-col gap-2 w-full">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">Adicionar Novo Piloto:</label>
-                <input 
-                  type="text" 
-                  placeholder="Nome completo..." 
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  className="w-full bg-gray-50 px-6 py-3 rounded-2xl border-2 border-transparent focus:border-sky-400 outline-none text-sm font-black shadow-inner"
-                />
+        {/* TOP HONORS: AJUDANTES DO DIA */}
+        <section className="w-full">
+          <div className="bg-slate-900 rounded-[3rem] p-8 flex flex-col border-[12px] border-slate-800 shadow-2xl relative overflow-hidden text-white">
+            {/* Background Decorative Elements */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-amber-500/5 blur-[80px] rounded-full translate-y-1/2 -translate-x-1/2" />
+            
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8 relative z-10">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 bg-purple-600 rounded-2xl flex items-center justify-center shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-300 ring-4 ring-purple-500/30">
+                  <HandHelping size={32} className="text-white" />
+                </div>
+                <div className="flex flex-col">
+                  <h2 className="text-purple-300 font-black text-3xl uppercase tracking-tighter italic leading-none">Ajudantes do Dia</h2>
+                  <p className="text-purple-400/60 text-xs font-black mt-2 uppercase tracking-widest italic">Os Pilotos de Ouro da Largada</p>
+                </div>
               </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2 text-center">Cor do Carro:</label>
-                <ColorPicker selected={newColor} onSelect={setNewColor} />
+              
+              <div className="flex items-center gap-3 bg-slate-800/50 px-6 py-3 rounded-2xl border border-slate-700/50 backdrop-blur-sm">
+                <div className="text-amber-400 animate-pulse">✨</div>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] italic">Grid de Largada</span>
+                <div className="text-amber-400 animate-pulse">✨</div>
               </div>
-              <button 
-                type="submit"
-                className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3 rounded-2xl font-black shadow-lg transition-all active:scale-95 flex items-center gap-2 border-b-4 border-emerald-700 self-end md:self-center"
-              >
-                <Plus size={24} /> Adicionar
-              </button>
-            </form>
-          ) : (
-            <div className="bg-sky-100 p-6 rounded-[2rem] border-2 border-dashed border-sky-300 text-center">
-              <p className="text-sky-600 font-black uppercase italic tracking-widest">
-                Selecione uma turma específica acima para adicionar alunos!
-              </p>
             </div>
-          )}
-
-          {/* BEHAVIOR ZONES (MAIN TRACKS) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* GREEN ZONE */}
-            <div className="bg-emerald-100 rounded-[40px] p-6 flex flex-col border-4 border-emerald-300 shadow-inner min-h-[500px]">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-emerald-500 rounded-full border-4 border-white shadow-md flex items-center justify-center text-white font-black italic text-xl">1️</div>
-                <h2 className="font-black text-emerald-700 text-xl uppercase italic tracking-tight">Pista Verde</h2>
-              </div>
-              <div className="grid grid-cols-2 gap-4 pb-8">
-                <AnimatePresence>
-                  {grouped.green.map(s => (
-                    <StudentCar 
-                      key={s.id} 
-                      student={s} 
-                      onStatusChange={updateStatus} 
-                      onDelete={deleteStudent} 
-                      isSaving={isSaving}
-                    />
-                  ))}
-                </AnimatePresence>
-              </div>
-              <p className="mt-auto text-[10px] text-emerald-600 font-black uppercase text-center py-2 bg-emerald-50 rounded-full border border-emerald-200">Pilotos em Velocidade Máxima! ✨</p>
-            </div>
-
-            {/* YELLOW ZONE */}
-            <div className="bg-amber-100 rounded-[40px] p-6 flex flex-col border-4 border-amber-300 shadow-inner min-h-[500px]">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-amber-400 rounded-full border-4 border-white shadow-md flex items-center justify-center text-white font-black italic text-xl">2️</div>
-                <h2 className="font-black text-amber-700 text-xl uppercase italic tracking-tight">Pista Amarela</h2>
-              </div>
-              <div className="grid grid-cols-2 gap-4 pb-8">
-                <AnimatePresence>
-                  {grouped.yellow.map(s => (
-                    <StudentCar 
-                      key={s.id} 
-                      student={s} 
-                      onStatusChange={updateStatus} 
-                      onDelete={deleteStudent} 
-                      isSaving={isSaving}
-                    />
-                  ))}
-                </AnimatePresence>
-              </div>
-              <p className="mt-auto text-[10px] text-amber-600 font-black uppercase text-center py-2 bg-amber-50 rounded-full border border-amber-200">Reduza a Velocidade! ⚠️</p>
-            </div>
-
-            {/* RED ZONE */}
-            <div className="bg-rose-100 rounded-[40px] p-6 flex flex-col border-4 border-rose-300 shadow-inner min-h-[500px]">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-rose-600 rounded-full border-4 border-white shadow-md flex items-center justify-center text-white font-black italic text-xl">3️</div>
-                <h2 className="font-black text-rose-700 text-xl uppercase italic tracking-tight">Pista Vermelha</h2>
-              </div>
-              <div className="grid grid-cols-2 gap-4 pb-8">
-                <AnimatePresence>
-                  {grouped.red.map(s => (
-                    <StudentCar 
-                      key={s.id} 
-                      student={s} 
-                      onStatusChange={updateStatus} 
-                      onDelete={deleteStudent} 
-                      isSaving={isSaving}
-                    />
-                  ))}
-                </AnimatePresence>
-              </div>
-              <p className="mt-auto text-[10px] text-rose-600 font-black uppercase text-center py-2 bg-rose-50 rounded-full border border-rose-200">Saída de Pista / Box 🚨</p>
-            </div>
-          </div>
-        </div>
-
-        {/* AJUDANTES SIDEBAR AREA */}
-        <div className="lg:col-span-4 bg-slate-900 rounded-[3rem] p-8 flex flex-col border-[12px] border-slate-800 shadow-2xl sticky lg:top-24 max-h-[calc(100vh-140px)] overflow-hidden text-white">
-          <div className="text-center mb-8">
-            <div className="text-5xl mb-3 animate-bounce">🤝</div>
-            <h2 className="text-purple-300 font-black text-2xl uppercase tracking-[0.2em] italic leading-none">AJUDANTES</h2>
-            <p className="text-purple-400 text-xs font-black mt-2 uppercase tracking-tighter">Carros de Ouro do Dia</p>
-          </div>
-          
-          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar lg:pb-10">
-            <div className="relative border-x-4 border-dashed border-purple-800/50 pt-8 pb-8 min-h-[400px]">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 px-4">
-                 <span className="text-[10px] font-black text-purple-400 uppercase tracking-[0.3em] italic">Grid de Ajudantes</span>
-              </div>
-              <div className="w-full mb-4">
+            
+            <div className="relative border-y-4 border-dashed border-slate-700/30 py-8 min-h-[220px] bg-slate-800/20 rounded-[2rem]">
+              <div className="w-full overflow-x-auto pb-4 px-6 custom-scrollbar">
                 {selectedClassId === 'all' ? (
-                  <div className="flex flex-col gap-8">
+                  <div className="flex gap-12 items-start py-4">
                     {classes.map(cls => {
                       const classHelpers = grouped.helper.filter(h => h.classId === cls.id);
                       if (classHelpers.length === 0) return null;
                       return (
-                        <div key={cls.id} className="w-full flex flex-col gap-4 items-center">
-                          <div className="w-full h-px bg-slate-800 my-2 flex items-center justify-center">
-                            <span className="bg-slate-900 px-3 text-[10px] font-black text-slate-500 uppercase tracking-widest italic">{cls.name}</span>
-                          </div>
-                          <Reorder.Group axis="y" values={classHelpers} onReorder={handleReorder} className="flex flex-col gap-6 w-full items-center">
-                            {classHelpers.map(s => (
-                              <Reorder.Item key={s.id} value={s} className="w-fit">
-                                <StudentCar 
-                                  student={s} 
-                                  onStatusChange={updateStatus} 
-                                  onDelete={deleteStudent} 
-                                  isSaving={isSaving}
-                                  isSelected 
-                                />
-                              </Reorder.Item>
-                            ))}
+                        <div key={cls.id} className="flex flex-col gap-6 items-center shrink-0 min-w-[200px] border-r-2 border-dashed border-slate-700/50 last:border-r-0 pr-12 last:pr-0">
+                          <span className="bg-slate-700 px-4 py-1.5 rounded-full text-[10px] font-black text-slate-300 uppercase tracking-widest italic border border-slate-600 shadow-sm">{cls.name}</span>
+                          <Reorder.Group axis="x" values={classHelpers} onReorder={handleReorder} className="flex gap-6 items-center">
+                            <AnimatePresence mode="popLayout">
+                              {classHelpers.map(s => (
+                                <Reorder.Item 
+                                  key={s.id} 
+                                  value={s} 
+                                  initial={{ opacity: 0, scale: 0.8 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  exit={{ opacity: 0, scale: 0.8 }}
+                                >
+                                  <StudentCar 
+                                    student={s} 
+                                    onStatusChange={updateStatus} 
+                                    onDelete={deleteStudent} 
+                                    isSaving={isSaving}
+                                    isSelected 
+                                  />
+                                </Reorder.Item>
+                              ))}
+                            </AnimatePresence>
                           </Reorder.Group>
                         </div>
                       );
                     })}
                   </div>
                 ) : (
-                  <Reorder.Group axis="y" values={grouped.helper} onReorder={handleReorder} className="flex flex-col gap-6 w-full items-center">
-                    {grouped.helper.map(s => (
-                      <Reorder.Item key={s.id} value={s} className="w-fit">
-                        <StudentCar 
-                          student={s} 
-                          onStatusChange={updateStatus} 
-                          onDelete={deleteStudent} 
-                          isSaving={isSaving}
-                          isSelected 
-                        />
-                      </Reorder.Item>
-                    ))}
+                  <Reorder.Group axis="x" values={grouped.helper} onReorder={handleReorder} className="flex gap-8 items-center py-4 px-4 overflow-x-auto min-h-[160px]">
+                    <AnimatePresence mode="popLayout">
+                      {grouped.helper.map(s => (
+                        <Reorder.Item 
+                          key={s.id} 
+                          value={s}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                        >
+                          <StudentCar 
+                            student={s} 
+                            onStatusChange={updateStatus} 
+                            onDelete={deleteStudent} 
+                            isSaving={isSaving}
+                            isSelected 
+                          />
+                        </Reorder.Item>
+                      ))}
+                    </AnimatePresence>
                   </Reorder.Group>
                 )}
                 
-                <AnimatePresence>
-                  {grouped.helper.length === 0 && (
-                    <div className="flex flex-col items-center justify-center p-12 opacity-20 border-2 border-dashed border-slate-700 rounded-[2rem] w-full">
-                      <HandHelping size={48} className="mb-4" />
-                      <p className="text-[10px] font-black uppercase italic text-center">Nenhum ajudante escalado</p>
-                    </div>
-                  )}
-                </AnimatePresence>
+                {grouped.helper.length === 0 && (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 0.1 }}
+                    className="flex flex-col items-center justify-center p-12 w-full"
+                  >
+                    <HandHelping size={64} className="mb-4" />
+                    <p className="text-xl font-black uppercase italic tracking-widest">Nenhum ajudante escalado hoje</p>
+                  </motion.div>
+                )}
               </div>
             </div>
             
-            {grouped.helper.length > 0 && (
-              <div className="mt-8 p-4 bg-purple-900/20 rounded-2xl border border-purple-800/30">
-                <p className="text-[10px] text-purple-300 font-black uppercase text-center leading-tight">
-                  ✨ Arraste os carros para mudar a ordem dos ajudantes.
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 px-4">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                <p className="text-[10px] text-purple-300 font-black uppercase italic tracking-widest">
+                  ✨ Carros de Ouro: Prontos para a largada!
+                </p>
+              </div>
+              <p className="text-[9px] text-slate-500 font-bold uppercase tracking-tight italic">
+                🏁 Arraste para mudar a ordem de serviço
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* ACTION PANEL */}
+          <div className="lg:col-span-12 flex flex-col gap-8">
+            
+            {/* Add Student Form */}
+            {selectedClassId !== 'all' ? (
+              <form onSubmit={addStudent} className="bg-white p-8 rounded-[3rem] border-4 border-sky-100 shadow-xl flex flex-col lg:flex-row gap-8 items-center relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-sky-50 rounded-full translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform duration-500" />
+                
+                <div className="flex-1 flex flex-col gap-3 w-full relative z-10">
+                  <div className="flex items-center gap-2 px-2">
+                    <UserPlus size={14} className="text-sky-400" />
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Adicionar Novo Piloto no Grid:</label>
+                  </div>
+                  <input 
+                    type="text" 
+                    placeholder="Ex: Ayrton Senna da Silva..." 
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    className="w-full bg-slate-50 px-6 py-4 rounded-[1.5rem] border-2 border-slate-100 focus:border-sky-400 focus:bg-white outline-none text-base font-black shadow-inner transition-all"
+                  />
+                </div>
+                <div className="flex flex-col gap-3 relative z-10 shrink-0">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Cor da Carroceria:</label>
+                  <div className="p-3 bg-slate-50 rounded-[1.5rem] border border-slate-100">
+                    <ColorPicker selected={newColor} onSelect={setNewColor} />
+                  </div>
+                </div>
+                <button 
+                  type="submit"
+                  disabled={!newName.trim() || isSaving}
+                  className="bg-sky-500 hover:bg-sky-600 disabled:opacity-50 text-white px-10 py-5 rounded-[1.5rem] font-black shadow-lg hover:shadow-sky-200 transition-all active:scale-95 flex items-center gap-3 border-b-6 border-sky-700 self-stretch lg:self-end mt-4 lg:mt-0 relative z-10"
+                >
+                  <Plus size={28} strokeWidth={3} /> <span className="text-lg">ENTRAR NA PISTA</span>
+                </button>
+              </form>
+            ) : (
+              <div className="bg-sky-100/50 p-8 rounded-[3rem] border-4 border-dashed border-sky-200 text-center flex flex-col items-center gap-4">
+                <Users size={32} className="text-sky-400" />
+                <p className="text-sky-600 font-black text-base uppercase italic tracking-[0.1em]">
+                  🚦 Selecione uma turma no cabeçalho para gerenciar os pilotos!
                 </p>
               </div>
             )}
-          </div>
 
-          <div className="mt-auto pt-6 border-t border-slate-800 text-center">
-            <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest leading-tight">
-              🏁 Respeite as leis de trânsito escolares!
-            </p>
+            {/* BEHAVIOR ZONES (MAIN TRACKS) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {/* GREEN ZONE */}
+              <div className="bg-emerald-100 rounded-[3rem] p-8 flex flex-col border-4 border-emerald-300 shadow-xl min-h-[600px] transition-transform hover:scale-[1.01] duration-300">
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-emerald-500 rounded-2xl border-4 border-white shadow-[0_8px_0_0_rgb(16,185,129)] flex items-center justify-center text-white font-black italic text-2xl">1️</div>
+                    <div>
+                      <h2 className="font-black text-emerald-800 text-2xl uppercase italic tracking-tight leading-none">Pista Verde</h2>
+                      <p className="text-emerald-600/60 text-[10px] font-black mt-1 uppercase italic">Velocidade Máxima</p>
+                    </div>
+                  </div>
+                  <Check size={24} className="text-emerald-500 opacity-30" />
+                </div>
+                <div className="grid grid-cols-2 gap-5 pb-8 flex-1 content-start">
+                  <AnimatePresence mode="popLayout">
+                    {grouped.green.map(s => (
+                      <StudentCar 
+                        key={s.id} 
+                        student={s} 
+                        onStatusChange={updateStatus} 
+                        onDelete={deleteStudent} 
+                        isSaving={isSaving}
+                      />
+                    ))}
+                  </AnimatePresence>
+                </div>
+                <div className="mt-auto space-y-4">
+                  <div className="h-1 bg-emerald-200 w-full rounded-full opacity-50" />
+                  <p className="text-[11px] text-emerald-700 font-extrabold uppercase text-center py-3 bg-emerald-50 rounded-[1.5rem] border-2 border-emerald-200 tracking-tight shadow-sm">
+                    ✨ Pilotos com Comportamento Exemplar!
+                  </p>
+                </div>
+              </div>
+
+              {/* YELLOW ZONE */}
+              <div className="bg-amber-100 rounded-[3rem] p-8 flex flex-col border-4 border-amber-300 shadow-xl min-h-[600px] transition-transform hover:scale-[1.01] duration-300">
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-amber-400 rounded-2xl border-4 border-white shadow-[0_8px_0_0_rgb(245,158,11)] flex items-center justify-center text-white font-black italic text-2xl">2️</div>
+                    <div>
+                      <h2 className="font-black text-amber-800 text-2xl uppercase italic tracking-tight leading-none">Pista Amarela</h2>
+                      <p className="text-amber-600/60 text-[10px] font-black mt-1 uppercase italic">Moderar Velocidade</p>
+                    </div>
+                  </div>
+                  <AlertTriangle size={24} className="text-amber-500 opacity-30" />
+                </div>
+                <div className="grid grid-cols-2 gap-5 pb-8 flex-1 content-start">
+                  <AnimatePresence mode="popLayout">
+                    {grouped.yellow.map(s => (
+                      <StudentCar 
+                        key={s.id} 
+                        student={s} 
+                        onStatusChange={updateStatus} 
+                        onDelete={deleteStudent} 
+                        isSaving={isSaving}
+                      />
+                    ))}
+                  </AnimatePresence>
+                </div>
+                <div className="mt-auto space-y-4">
+                  <div className="h-1 bg-amber-200 w-full rounded-full opacity-50" />
+                  <p className="text-[11px] text-amber-700 font-extrabold uppercase text-center py-3 bg-amber-50 rounded-[1.5rem] border-2 border-amber-200 tracking-tight shadow-sm">
+                    ⚠️ Atenção! Reduza a velocidade.
+                  </p>
+                </div>
+              </div>
+
+              {/* RED ZONE */}
+              <div className="bg-rose-100 rounded-[3rem] p-8 flex flex-col border-4 border-rose-300 shadow-xl min-h-[600px] transition-transform hover:scale-[1.01] duration-300">
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-rose-600 rounded-2xl border-4 border-white shadow-[0_8px_0_0_rgb(225,29,72)] flex items-center justify-center text-white font-black italic text-2xl">3️</div>
+                    <div>
+                      <h2 className="font-black text-rose-800 text-2xl uppercase italic tracking-tight leading-none">Pista Vermelha</h2>
+                      <p className="text-rose-600/60 text-[10px] font-black mt-1 uppercase italic">Parada no Box</p>
+                    </div>
+                  </div>
+                  <RotateCcw size={24} className="text-rose-500 opacity-30" />
+                </div>
+                <div className="grid grid-cols-2 gap-5 pb-8 flex-1 content-start">
+                  <AnimatePresence mode="popLayout">
+                    {grouped.red.map(s => (
+                      <StudentCar 
+                        key={s.id} 
+                        student={s} 
+                        onStatusChange={updateStatus} 
+                        onDelete={deleteStudent} 
+                        isSaving={isSaving}
+                      />
+                    ))}
+                  </AnimatePresence>
+                </div>
+                <div className="mt-auto space-y-4">
+                  <div className="h-1 bg-rose-200 w-full rounded-full opacity-50" />
+                  <div className="p-4 bg-rose-600 rounded-[1.5rem] border-b-6 border-rose-800 shadow-lg">
+                    <p className="text-[10px] text-white font-black uppercase text-center leading-tight">
+                      🚨 SAÍDA DE PISTA: Conversar no Box com a Coordenação!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </main>
+
 
       {/* --- MODALS --- */}
 
