@@ -117,124 +117,122 @@ const CAR_COLORS = [
 // --- Components ---
 
 const RacingCar = ({ color = '#94a3b8', size = 32, className = "", showExhaust = false }: { color?: string, size?: number, className?: string, showExhaust?: boolean }) => {
-  const carColor = color || '#94a3b8';
+  const poleColor = color || '#94a3b8';
   return (
     <div 
       className={`relative ${className}`} 
-      style={{ width: size, height: size * 0.6 }}
+      style={{ width: size, height: size * 0.8 }}
     >
       <svg 
-        viewBox="0 0 100 60" 
+        viewBox="0 0 100 80" 
         fill="none" 
         xmlns="http://www.w3.org/2000/svg"
-        className="w-full h-full drop-shadow-2xl"
+        className="w-full h-full drop-shadow-2xl overflow-visible"
       >
         <defs>
-          <linearGradient id={`grad-${carColor.replace('#','')}`} x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="white" stopOpacity="0.3" />
-            <stop offset="50%" stopColor="white" stopOpacity="0" />
-            <stop offset="100%" stopColor="black" stopOpacity="0.2" />
+          <linearGradient id="flag-green" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#00b046" />
+            <stop offset="100%" stopColor="#007a30" />
           </linearGradient>
-          <filter id="inner-shadow">
-            <feOffset dx="0" dy="2" />
-            <feGaussianBlur stdDeviation="2" result="offset-blur" />
-            <feComposite operator="out" in="SourceGraphic" in2="offset-blur" result="inverse" />
-            <feFlood floodColor="black" floodOpacity="0.3" result="color" />
-            <feComposite operator="in" in="color" in2="inverse" result="shadow" />
-            <feComponentTransfer in="shadow" result="shadow">
-              <feFuncA type="linear" slope="0.5" />
-            </feComponentTransfer>
-            <feComposite operator="over" in="shadow" in2="SourceGraphic" />
+          <linearGradient id="flag-yellow" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#ffee1a" />
+            <stop offset="100%" stopColor="#e5c100" />
+          </linearGradient>
+          <linearGradient id="flag-blue" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#2b50f6" />
+            <stop offset="100%" stopColor="#001c76" />
+          </linearGradient>
+          <linearGradient id={`pole-${poleColor.replace('#','')}`} x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={poleColor} />
+            <stop offset="30%" stopColor="#ffffff" stopOpacity="0.6" />
+            <stop offset="70%" stopColor={poleColor} />
+            <stop offset="100%" stopColor="black" stopOpacity="0.4" />
+          </linearGradient>
+          <filter id="shadow-effect" x="-10%" y="-10%" width="120%" height="120%">
+            <feDropShadow dx="1" dy="3" stdDeviation="1.5" floodOpacity="0.25" />
           </filter>
         </defs>
 
-        {/* Shadow under car */}
-        <ellipse cx="50" cy="55" rx="42" ry="5" fill="rgba(0,0,0,0.2)" />
-        
-        {/* Rear Wing (Aerofólio) */}
-        <path d="M5 25 L25 25 L20 35 L10 35 Z" fill={carColor} filter="brightness(0.6)" />
-        <rect x="8" y="35" width="2" height="8" fill={carColor} filter="brightness(0.5)" />
-        <rect x="20" y="35" width="2" height="8" fill={carColor} filter="brightness(0.5)" />
+        {/* Flagpole Base */}
+        <ellipse cx="20" cy="74" rx="12" ry="3.5" fill="rgba(0,0,0,0.15)" />
+        <path d="M12 74 L28 74 L25 77 L15 77 Z" fill="#64748b" />
 
-        {/* Main Body */}
-        <path 
-          d="M10 40C10 40 18 20 55 20C88 20 92 38 95 42C98 46 95 52 90 52H15C10 52 5 48 10 40Z" 
-          fill={carColor} 
-          filter="url(#inner-shadow)"
-        />
-        
-        {/* Door and Window Line */}
-        <path 
-          d="M35 48 L35 30 Q50 25 75 30 L75 48" 
-          stroke="black" 
-          strokeWidth="0.5" 
-          strokeOpacity="0.15" 
-          fill="none" 
-        />
-        
-        {/* Side Number Plate */}
-        <circle cx="55" cy="40" r="7" fill="white" fillOpacity="0.1" />
-        <text x="55" y="42" fontSize="6" fontWeight="900" fill="white" fillOpacity="0.2" textAnchor="middle" style={{ fontStyle: 'italic' }}>01</text>
+        {/* Flagpole with customizable team/class color */}
+        <rect x="18" y="6" width="4" height="68" rx="1" fill={`url(#pole-${poleColor.replace('#','')})`} />
+        <circle cx="20" cy="5" r="3" fill="#f1f5f9" stroke={poleColor} strokeWidth="1" />
 
-        {/* Side Detail Overlay */}
-        <path 
-          d="M25 40 Q50 35 85 45" 
-          stroke="white" 
-          strokeWidth="3" 
-          strokeOpacity="0.1" 
-          fill="none" 
-          strokeLinecap="round"
-        />
-        
-        {/* Cockpit / Glass */}
-        <path 
-          d="M45 22C45 22 50 14 65 14C80 14 85 22 85 22" 
-          fill="rgba(15, 23, 42, 0.8)" 
-        />
-        <path 
-          d="M48 22C48 22 52 16 65 16C78 16 82 22 82 22" 
-          fill="rgba(56, 189, 248, 0.2)" 
-        />
-        
-        {/* Body Shine */}
-        <path d="M55 20C80 20 90 35 90 35" stroke="white" strokeWidth="2" strokeOpacity="0.2" strokeLinecap="round" />
+        {/* Elegant colorful tassel hanging from the pole */}
+        <path d="M18 12 Q8 14 13 22 Q18 30 10 36" stroke={poleColor} strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.9" />
 
-        {/* Wheels */}
-        <circle cx="26" cy="50" r="8" fill="#0f172a" />
-        <circle cx="26" cy="50" r="4" fill="#94a3b8" />
-        <circle cx="74" cy="50" r="8" fill="#0f172a" />
-        <circle cx="74" cy="50" r="4" fill="#94a3b8" />
-        
-        {/* Headlights */}
-        <path d="M92 40 Q96 40 96 44 L92 46 Z" fill="#fbbf24" filter="drop-shadow(0 0 4px #fbbf24)" />
+        {/* Waving Brazil Flag */}
+        <g filter="url(#shadow-effect)">
+          {/* Main Flag Canvas - Green fabric with waving bezier contour */}
+          <path 
+            d="M22 12 
+               Q38 8, 54 12 
+               T86 12 
+               L86 48 
+               Q70 44, 54 48 
+               T22 48 Z" 
+            fill="url(#flag-green)" 
+            stroke="#00521c"
+            strokeWidth="1.5"
+          />
+
+          {/* Yellow Diamond */}
+          <path 
+            d="M30 30 
+               Q38 20, 54 20
+               Q70 20, 78 30
+               Q70 40, 54 40
+               Q38 40, 30 30 Z" 
+            fill="url(#flag-yellow)" 
+          />
+
+          {/* Central Blue Globe */}
+          <circle cx="54" cy="30" r="7.5" fill="url(#flag-blue)" />
+
+          {/* White arch (recursively mimicking ORDEM E PROGRESSO) */}
+          <path 
+            d="M48 33 Q54 28 60 29" 
+            stroke="#ffffff" 
+            strokeWidth="1.2" 
+            strokeLinecap="round" 
+            fill="none" 
+          />
+          
+          {/* Constellation stars */}
+          <circle cx="51" cy="34" r="0.4" fill="#ffffff" />
+          <circle cx="55" cy="33" r="0.4" fill="#ffffff" />
+          <circle cx="57" cy="32" r="0.4" fill="#ffffff" />
+          <circle cx="53" cy="31" r="0.4" fill="#ffffff" />
+          <circle cx="56" cy="35" r="0.3" fill="#ffffff" />
+        </g>
       </svg>
-      
-      {/* Light Glow */}
-      <div 
-        className="absolute top-1/2 -right-4 -translate-y-1/2 w-16 h-16 bg-yellow-400/20 blur-2xl rounded-full opacity-60"
-      />
-      
-      {/* Exhaust Smoke */}
+
+      {/* Flag Sparkles/Stars */}
       {showExhaust && (
-        <div className="absolute -left-6 top-[70%] -translate-y-1/2 flex gap-1">
-          {[...Array(4)].map((_, i) => (
+        <div className="absolute -right-4 top-[20%] -translate-y-1/2 flex flex-col gap-1">
+          {[...Array(3)].map((_, i) => (
             <motion.div 
               key={i}
-              initial={{ scale: 0, opacity: 1, x: 0, y: 0 }}
+              initial={{ scale: 0, opacity: 0.8 }}
               animate={{ 
-                scale: [0.5, 1.8, 2.5], 
-                opacity: [1, 0.4, 0], 
-                x: [-15, -35, -55],
-                y: [0, -10, 5]
+                scale: [0.4, 1.2, 0], 
+                opacity: [1, 0.7, 0], 
+                x: [0, 20, 35],
+                y: [0, i * 4 - 4, i * 8 - 8]
               }}
               transition={{ 
-                duration: 1, 
+                duration: 1.2, 
                 repeat: Infinity, 
-                delay: i * 0.25,
+                delay: i * 0.3,
                 ease: "easeOut"
               }}
-              className="w-3 h-3 rounded-full bg-slate-300/40 backdrop-blur-[2px]"
-            />
+              className="w-2 h-2 text-amber-400 font-bold select-none pointer-events-none"
+            >
+              ✨
+            </motion.div>
           ))}
         </div>
       )}
@@ -276,24 +274,19 @@ const StudentCar = ({
 
   const getBorderColor = () => {
     switch (student.status) {
-      case 'green': return 'border-emerald-400 shadow-emerald-200/50';
-      case 'yellow': return 'border-amber-400 shadow-amber-200/50';
-      case 'red': return 'border-rose-400 shadow-rose-200/50';
-      case 'excellence': return 'border-indigo-400 shadow-indigo-200/50';
-      case 'helper': return 'border-purple-400 shadow-purple-200/50';
-      default: return 'border-gray-200';
+      case 'green': return 'border-emerald-500 shadow-emerald-500/20';
+      case 'yellow': return 'border-yellow-500 shadow-yellow-500/20';
+      case 'red': return 'border-rose-500 shadow-rose-500/20';
+      case 'excellence': return 'border-indigo-400 shadow-indigo-400/20';
+      case 'helper': return 'border-yellow-400 shadow-yellow-400/30';
+      default: return 'border-slate-800';
     }
   };
 
   const getBgColor = () => {
-    if (student.status === 'excellence') return 'bg-indigo-900/40';
-    if (student.status === 'helper') return 'bg-purple-900/40';
-    return isSelected ? 'bg-sky-50' : 'bg-white';
-  };
-
-  const getTextColor = () => {
-    if (student.status === 'excellence' || student.status === 'helper') return 'text-white';
-    return 'text-gray-700';
+    if (student.status === 'excellence') return 'bg-gradient-to-br from-indigo-950/80 to-slate-900/90';
+    if (student.status === 'helper') return 'bg-gradient-to-br from-yellow-950/50 via-purple-900/70 to-slate-950/90';
+    return 'bg-gradient-to-br from-slate-900/90 to-slate-950/95';
   };
 
   return (
@@ -302,63 +295,117 @@ const StudentCar = ({
       initial={{ scale: 0.8, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       exit={{ scale: 0.8, opacity: 0 }}
-      whileHover={{ y: -4, scale: 1.01 }}
-      whileDrag={{ scale: 1.05, shadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)", zIndex: 100 }}
-      className={`relative group flex flex-col items-center p-4 rounded-[2rem] shadow-lg border-b-[12px] ${getBorderColor()} ${getBgColor()} transition-all hover:shadow-2xl cursor-grab active:cursor-grabbing overflow-visible`}
+      whileHover={{ y: -6, scale: 1.02 }}
+      whileDrag={{ scale: 1.05, shadow: "0 25px 30px -5px rgb(0 0 0 / 0.5)", zIndex: 100 }}
+      className={`relative group flex flex-col items-center p-5 rounded-[2.5rem] shadow-xl border-t-2 border-x-2 border-b-[14px] ${getBorderColor()} ${getBgColor()} transition-all hover:shadow-2xl cursor-grab active:cursor-grabbing overflow-visible`}
       onClick={() => setIsOptionsOpen(!isOptionsOpen)}
     >
       <RacingCar 
         color={student.status === 'helper' ? '#FFD700' : student.carColor} 
-        size={54} 
+        size={56} 
         className="mb-3 pointer-events-none" 
         showExhaust={student.status === 'green' || student.status === 'excellence'} 
       />
-      <div className="flex flex-col items-center gap-0.5 pointer-events-none">
-        <span className={`text-[10px] font-black max-w-[90px] truncate text-center ${getTextColor()} tracking-tighter uppercase italic drop-shadow-sm`}>
+      <div className="flex flex-col items-center gap-1 pointer-events-none w-full">
+        <span className="text-[11px] font-black max-w-[110px] truncate text-center text-white tracking-tight uppercase italic drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
           {student.name}
         </span>
-        <div className="h-1 w-8 rounded-full bg-slate-200/30" />
+        {student.status === 'helper' && (
+          <span className="text-[8px] bg-yellow-400 text-slate-950 font-black px-2 py-0.5 rounded-full uppercase tracking-widest italic scale-90">
+            👑 CAPITÃO
+          </span>
+        )}
       </div>
-
-      {/* Direct Reorder buttons removed in favor of drag and drop */}
 
       <AnimatePresence>
         {isOptionsOpen && (
           <>
             <div className="fixed inset-0 z-50" onClick={(e) => { e.stopPropagation(); setIsOptionsOpen(false); }} />
             <motion.div 
-              initial={{ opacity: 0, y: -10, scale: 0.8 }}
+              initial={{ opacity: 0, y: 15, scale: 0.85 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.8 }}
-              className="absolute top-full mt-3 z-[60] bg-white shadow-2xl rounded-[2rem] p-3 border-4 border-sky-100 flex gap-3 left-1/2 -translate-x-1/2 whitespace-nowrap"
+              exit={{ opacity: 0, y: 15, scale: 0.85 }}
+              className="absolute top-full mt-4 z-[60] bg-slate-950/95 shadow-[0_20px_40px_rgba(0,0,0,0.8)] rounded-[2.5rem] p-5 border-4 border-yellow-400/80 flex flex-col items-center gap-4 left-1/2 -translate-x-1/2 whitespace-nowrap min-w-[280px]"
               onClick={(e) => e.stopPropagation()}
             >
-              <button title="Bem comportado" onClick={() => { onStatusChange(student.id, 'green'); setIsOptionsOpen(false); }} className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center hover:scale-110 shadow-lg transition-transform active:scale-95"><Check size={20} strokeWidth={3} /></button>
-              <button title="Atenção" onClick={() => { onStatusChange(student.id, 'yellow'); setIsOptionsOpen(false); }} className="w-10 h-10 rounded-full bg-amber-400 text-white flex items-center justify-center hover:scale-110 shadow-lg transition-transform active:scale-95"><AlertTriangle size={20} strokeWidth={3} /></button>
-              <button title="Pare / Saída" onClick={() => { onStatusChange(student.id, 'red'); setIsOptionsOpen(false); }} className="w-10 h-10 rounded-full bg-rose-500 text-white flex items-center justify-center hover:scale-110 shadow-lg transition-transform active:scale-95"><X size={20} strokeWidth={3} /></button>
-              <div className="w-0.5 bg-gray-100 mx-1 rounded-full" />
-              <button title="Ajudante do Dia" onClick={() => { onStatusChange(student.id, 'helper'); setIsOptionsOpen(false); }} className="w-10 h-10 rounded-full bg-purple-500 text-white flex items-center justify-center hover:scale-110 shadow-lg transition-transform active:scale-95"><HandHelping size={18} strokeWidth={3} /></button>
-              <div className="w-0.5 bg-gray-100 mx-1 rounded-full" />
-              <button 
-                title="Remover Estudante" 
-                disabled={isSaving}
-                onClick={() => setConfirmDelete(!confirmDelete)} 
-                className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-95 disabled:opacity-50 ${confirmDelete ? 'bg-rose-600 text-white' : 'bg-slate-100 text-rose-500 hover:bg-rose-50'}`}
-              >
-                {isSaving && confirmDelete ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <Trash2 size={18} strokeWidth={3} />
-                )}
-              </button>
-              {confirmDelete && (
+              <span className="text-[10px] font-black text-yellow-400 uppercase tracking-widest italic border-b border-slate-800 pb-2 w-full text-center">
+                🏆 ALTERAR POSIÇÃO NO PÓDIO
+              </span>
+
+              {/* Champion Podium Selector */}
+              <div className="flex items-end gap-3 justify-center h-28 px-1 pb-1">
+                {/* 2o Lugar - Reservas */}
+                <div className="flex flex-col items-center">
+                  <span className="text-[8px] font-black text-amber-500 uppercase italic mb-0.5">2º Lugar</span>
+                  <button 
+                    title="Mudar para Reservas" 
+                    onClick={() => { onStatusChange(student.id, 'yellow'); setIsOptionsOpen(false); }} 
+                    className="w-16 h-16 rounded-t-xl bg-gradient-to-b from-yellow-400 via-amber-500 to-amber-700 text-slate-950 font-extrabold flex flex-col items-center justify-between py-2 hover:scale-105 shadow-md transition-transform active:scale-95 border border-white/20"
+                  >
+                    <span className="text-sm">🥈</span>
+                    <span className="text-[8px] uppercase tracking-tighter">RESERVA</span>
+                  </button>
+                </div>
+
+                {/* 1o Lugar - Titulares */}
+                <div className="flex flex-col items-center">
+                  <span className="text-[9px] font-black text-yellow-400 uppercase italic mb-0.5 animate-pulse">1º Lugar</span>
+                  <button 
+                    title="Mudar para Titulares" 
+                    onClick={() => { onStatusChange(student.id, 'green'); setIsOptionsOpen(false); }} 
+                    className="w-20 h-20 rounded-t-xl bg-gradient-to-b from-emerald-400 via-green-500 to-green-700 text-white font-extrabold flex flex-col items-center justify-between py-2 hover:scale-105 shadow-xl transition-transform active:scale-95 border-2 border-yellow-400"
+                  >
+                    <span className="text-base">🥇</span>
+                    <span className="text-[9px] uppercase tracking-tighter">TITULAR</span>
+                  </button>
+                </div>
+
+                {/* 3o Lugar - Área Técnica */}
+                <div className="flex flex-col items-center">
+                  <span className="text-[8px] font-black text-rose-400 uppercase italic mb-0.5">3º Lugar</span>
+                  <button 
+                    title="Mudar para Área Técnica" 
+                    onClick={() => { onStatusChange(student.id, 'red'); setIsOptionsOpen(false); }} 
+                    className="w-16.5 h-12 rounded-t-xl bg-gradient-to-b from-rose-500 via-red-600 to-red-800 text-white font-extrabold flex flex-col items-center justify-between py-1.5 hover:scale-105 shadow-md transition-transform active:scale-95 border border-white/25"
+                  >
+                    <span className="text-xs">🥉</span>
+                    <span className="text-[8px] uppercase tracking-tighter">TÉCNICO</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Extras and Actions */}
+              <div className="flex items-center gap-2.5 w-full border-t border-slate-900 pt-3">
                 <button 
-                  onClick={() => { onDelete(student.id); setIsOptionsOpen(false); setConfirmDelete(false); }}
-                  className="bg-rose-600 text-white text-[8px] font-black px-3 rounded-full uppercase italic animate-pulse"
+                  title="Tornar Capitão do Time" 
+                  onClick={() => { onStatusChange(student.id, 'helper'); setIsOptionsOpen(false); }} 
+                  className="flex-1 h-9 px-3 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-[9px] font-black uppercase italic shadow-md transition-all active:scale-95 flex items-center justify-center gap-1.5"
                 >
-                  Confirmar?
+                  👑 CAPITÃO
                 </button>
-              )}
+                
+                <button 
+                  title="Excluir Jogador" 
+                  disabled={isSaving}
+                  onClick={() => setConfirmDelete(!confirmDelete)} 
+                  className={`w-9 h-9 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-95 disabled:opacity-50 ${confirmDelete ? 'bg-rose-600 text-white animate-pulse' : 'bg-slate-800 text-rose-400 hover:bg-slate-700'}`}
+                >
+                  {isSaving && confirmDelete ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Trash2 size={15} strokeWidth={3} />
+                  )}
+                </button>
+
+                {confirmDelete && (
+                  <button 
+                    onClick={() => { onDelete(student.id); setIsOptionsOpen(false); setConfirmDelete(false); }}
+                    className="bg-rose-600 text-white text-[8px] font-black px-3 py-2 rounded-full uppercase italic animate-pulse"
+                  >
+                    OK?
+                  </button>
+                )}
+              </div>
             </motion.div>
           </>
         )}
@@ -739,99 +786,115 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-8 overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-tr from-sky-950 via-slate-900 to-emerald-950 flex flex-col items-center justify-center p-8 overflow-hidden">
         {/* Animated Background Atmosphere */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 blur-[120px] rounded-full animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 blur-[120px] rounded-full animate-pulse delay-700" />
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/10 blur-[120px] rounded-full animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-yellow-500/10 blur-[120px] rounded-full animate-pulse delay-700" />
         </div>
 
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="relative w-full max-w-2xl h-64 flex flex-col justify-center items-center gap-12"
+          className="relative w-full max-w-2xl h-80 flex flex-col justify-center items-center gap-12"
         >
-          {/* Race Track */}
-          <div className="absolute inset-0 bg-slate-900 rounded-[3rem] border-y-8 border-slate-800 shadow-2xl overflow-hidden flex flex-col justify-center">
-            {/* Guard Rails */}
-            <div className="absolute top-0 left-0 right-0 h-4 bg-red-600 bg-[linear-gradient(90deg,#fff_50%,transparent_50%)] bg-[length:40px_100%] opacity-40" />
-            <div className="absolute bottom-0 left-0 right-0 h-4 bg-red-600 bg-[linear-gradient(90deg,#fff_50%,transparent_50%)] bg-[length:40px_100%] opacity-40" />
+          {/* Sky Board Frame */}
+          <div className="absolute inset-0 bg-gradient-to-b from-sky-900/60 to-slate-900/40 rounded-[3rem] border-8 border-sky-500/20 shadow-2xl overflow-hidden flex flex-col justify-center">
+            {/* Soft Sun/Stars Glow in Loading */}
+            <div className="absolute top-8 left-12 w-24 h-24 bg-yellow-300/10 rounded-full blur-2xl" />
             
-            {/* Lane Markers */}
-            <div className="h-1 w-[200%] bg-white/20 border-t-4 border-dashed border-white/20 animate-[move-track_1s_linear_infinite]" />
+            {/* Animated Clouds */}
+            <motion.div 
+              animate={{ x: [-120, 680] }}
+              transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+              className="absolute text-5xl opacity-10 select-none pointer-events-none"
+              style={{ top: '15%' }}
+            >
+              ☁️
+            </motion.div>
+            <motion.div 
+              animate={{ x: [680, -120] }}
+              transition={{ duration: 24, repeat: Infinity, ease: "linear" }}
+              className="absolute text-6xl opacity-10 select-none pointer-events-none"
+              style={{ bottom: '20%' }}
+            >
+              ☁️
+            </motion.div>
           </div>
 
-          {/* Car Racing Through */}
-          <div className="relative z-10 w-full flex justify-center">
+          {/* Majestic Waving Large Brazil Flag */}
+          <div className="relative z-10 w-full flex justify-center mt-6">
              <motion.div
                animate={{ 
-                 x: [-100, 100],
-                 y: [0, -5, 5, 0],
-                 rotate: [0, 2, -2, 0]
+                 y: [0, -6, 6, 0],
+                 rotate: [0, 1.5, -1.5, 0]
                }}
                transition={{ 
-                 x: { duration: 2, repeat: Infinity, ease: "linear" },
-                 y: { duration: 0.5, repeat: Infinity, ease: "easeInOut" },
-                 rotate: { duration: 0.4, repeat: Infinity, ease: "easeInOut" }
+                 y: { duration: 2.2, repeat: Infinity, ease: "easeInOut" },
+                 rotate: { duration: 1.8, repeat: Infinity, ease: "easeInOut" }
                }}
              >
-                <RacingCar color="#ef4444" size={120} />
+                <RacingCar color="#10b981" size={130} showExhaust={true} />
              </motion.div>
           </div>
 
           <div className="text-center z-10">
             <motion.div 
-              animate={{ opacity: [0.6, 1, 0.6], y: [0, -2, 0] }}
-              transition={{ duration: 1, repeat: Infinity }}
-              className="flex flex-col items-center gap-2"
+              animate={{ opacity: [0.7, 1, 0.7], y: [0, -2, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+              className="flex flex-col items-center gap-3"
             >
-              <h2 className="text-white font-black text-4xl uppercase italic tracking-[0.2em] drop-shadow-2xl flex items-center gap-4">
-                <span className="text-sky-400">Motores</span> Ligados!
+              <h2 className="text-white font-black text-3xl uppercase italic tracking-[0.2em] drop-shadow-2xl flex items-center gap-3">
+                <span className="text-yellow-400">Pátria</span> Educadora
               </h2>
-              <div className="flex gap-1 mt-2">
-                 {[...Array(3)].map((_, i) => (
+              <div className="flex gap-1.5 mt-1">
+                 {[...Array(4)].map((_, i) => (
                    <motion.div 
                     key={i}
-                    animate={{ scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }}
-                    transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.2 }}
-                    className="w-2 h-2 rounded-full bg-sky-400"
+                    animate={{ scale: [1, 1.6, 1], opacity: [0.3, 1, 0.3] }}
+                    transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.15 }}
+                    className="w-2.5 h-2.5 rounded-full bg-emerald-400 border border-emerald-300"
                    />
                  ))}
               </div>
             </motion.div>
-            <p className="text-slate-500 font-bold text-xs uppercase tracking-[0.4em] mt-6 opacity-60">Sincronizando a Sala de Aula</p>
+            <p className="text-slate-400 font-bold text-xs uppercase tracking-[0.4em] mt-6 opacity-75">Hasteando as Atividades...</p>
           </div>
         </motion.div>
-
-        <style>{`
-          @keyframes move-track {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50px); }
-          }
-        `}</style>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-sky-50 font-sans text-gray-900 pb-20">
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-950 via-slate-900 to-black font-sans text-slate-100 pb-20 relative overflow-hidden">
+      {/* Stadium Pitch Lines Overlays */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none select-none overflow-hidden">
+        {/* Field center circle */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full border-8 border-white" />
+        {/* Center line */}
+        <div className="absolute top-1/2 left-0 right-0 h-2 bg-white -translate-y-1/2" />
+        {/* Penalty areas */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[200px] border-b-8 border-x-8 border-white" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[200px] border-t-8 border-x-8 border-white" />
+      </div>
+
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white border-b-4 border-sky-200 shadow-sm p-4 md:px-8">
+      <header className="sticky top-0 z-40 bg-gradient-to-r from-emerald-900 via-emerald-950 to-slate-950 border-b-6 border-yellow-500 shadow-2xl p-4 md:px-8">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-6">
           <div>
-            <h1 className="text-2xl font-black text-sky-600 tracking-tight flex items-center gap-3">
-              <span className="text-3xl">🏎️</span> SEMÁFORO DA TURMINHA
+            <h1 className="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-green-400 to-sky-400 tracking-tighter flex items-center gap-3 italic">
+              <span className="text-3xl animate-bounce">⚽</span> COPA DO MUNDO DA TURMINHA
             </h1>
-            <div className="flex items-center gap-3 mt-1 flex-wrap">
+            <div className="flex items-center gap-3 mt-2 flex-wrap">
               <select 
                 value={selectedSeries}
                 onChange={(e) => {
                   setSelectedSeries(e.target.value);
                   setSelectedClassId('all');
                 }}
-                className="bg-purple-50 px-3 py-1.5 rounded-xl border-2 border-purple-200 outline-none text-xs font-black text-purple-700 cursor-pointer hover:bg-purple-100 transition-colors shadow-sm"
+                className="bg-emerald-900/60 px-3 py-1.5 rounded-xl border-2 border-emerald-500 outline-none text-xs font-black text-yellow-300 cursor-pointer hover:bg-emerald-800 transition-colors shadow-sm"
               >
-                <option value="all">Filtro por Série: Todas</option>
+                <option value="all">Série: Todas</option>
                 {seriesList.map(s => (
                   <option key={s} value={s}>{s}</option>
                 ))}
@@ -839,17 +902,17 @@ export default function App() {
               <select 
                 value={selectedClassId}
                 onChange={(e) => setSelectedClassId(e.target.value)}
-                className="bg-sky-50 px-3 py-1.5 rounded-xl border-2 border-sky-200 outline-none text-xs font-black text-sky-700 cursor-pointer hover:bg-sky-100 transition-colors shadow-sm"
+                className="bg-emerald-950/80 px-3 py-1.5 rounded-xl border-2 border-emerald-500 outline-none text-xs font-black text-white cursor-pointer hover:bg-emerald-900 transition-colors shadow-sm"
               >
-                <option value="all">Escolher Turma: Todas</option>
+                <option value="all">Escalar Turma: Todas</option>
                 {classes.filter(c => selectedSeries === 'all' || c.series === selectedSeries).map(c => (
                   <option key={c.id} value={c.id}>{c.name} {c.series ? `(${c.series})` : ''}</option>
                 ))}
               </select>
               <button 
                 onClick={() => setShowClassesModal(true)}
-                className="text-sky-400 hover:text-sky-600 transition-colors"
-                title="Editar Turmas"
+                className="text-yellow-400 hover:text-yellow-500 hover:scale-110 transition-transform"
+                title="Editar Turmas / Times"
               >
                 <Settings size={18} />
               </button>
@@ -857,16 +920,16 @@ export default function App() {
                 <motion.span 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="text-[8px] font-black text-emerald-500 uppercase tracking-widest animate-pulse"
+                  className="text-[10px] font-black text-yellow-400 uppercase tracking-widest animate-pulse"
                 >
-                  Salvando...
+                  Gravando tática...
                 </motion.span>
               )}
               {globalError && (
                 <motion.span 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="text-[8px] font-black text-rose-500 uppercase tracking-widest"
+                  className="text-[10px] font-black text-rose-400 uppercase tracking-widest"
                 >
                   {globalError}
                 </motion.span>
@@ -875,32 +938,33 @@ export default function App() {
           </div>
           
           <div className="flex flex-wrap items-center gap-4">
-            <div className="bg-amber-100 px-6 py-2 rounded-2xl border-2 border-amber-300 hidden sm:block">
-              <span className="text-amber-700 font-bold text-lg">Estudantes: {currentStudents.length}</span>
+            <div className="bg-yellow-400/10 px-5 py-2 rounded-2xl border-2 border-yellow-500/50 hidden sm:flex items-center gap-2">
+              <span className="text-yellow-400 font-extrabold text-sm uppercase tracking-wider">Jogadores:</span>
+              <span className="text-white font-black text-lg">{currentStudents.length}</span>
             </div>
-
+ 
             <button 
               onClick={() => setShowBulkAdd(true)}
-              className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-black flex items-center gap-2 shadow-md transition-all active:scale-95 border-b-4 border-indigo-700"
+              className="bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-slate-950 px-4 py-2 rounded-xl text-sm font-black flex items-center gap-2 shadow-lg transition-all active:scale-95 border-b-4 border-amber-800"
             >
-              <Upload size={18} />+ Turma Inteira
+              <Upload size={18} />+ Convocar Turma
             </button>
-
+ 
             <button 
               onClick={() => setConfirmingReset(!confirmingReset)}
-              className={`border-2 p-2 rounded-xl transition-all shadow-sm active:scale-95 flex items-center gap-2 overflow-hidden ${confirmingReset ? 'bg-amber-500 border-amber-600 text-white px-4' : 'bg-white border-sky-100 text-sky-400 hover:bg-sky-50'}`}
-              title="Resetar Turma"
+              className={`border-2 p-2 rounded-xl transition-all shadow-sm active:scale-95 flex items-center gap-2 overflow-hidden ${confirmingReset ? 'bg-amber-500 border-amber-600 text-white px-4' : 'bg-slate-800/80 border-emerald-500/30 text-yellow-400 hover:bg-slate-700'}`}
+              title="Apito Final (Resetar Partida)"
             >
               <RotateCcw size={20} className={confirmingReset ? 'animate-spin' : ''} />
-              {confirmingReset && <span onClick={(e) => { e.stopPropagation(); resetAll(); }} className="text-[10px] font-black uppercase">Confirmar Reset?</span>}
+              {confirmingReset && <span onClick={(e) => { e.stopPropagation(); resetAll(); }} className="text-[10px] font-black uppercase">Apito Inicial (Reset)?</span>}
             </button>
-
+ 
             {selectedClassId !== 'all' && (
               <button 
                 onClick={() => setConfirmingDeleteClass(confirmingDeleteClass === selectedClassId ? null : selectedClassId)}
                 disabled={isSaving}
-                className={`border-2 p-2 rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-50 flex items-center gap-2 overflow-hidden ${confirmingDeleteClass === selectedClassId ? 'bg-rose-600 border-rose-700 text-white px-4' : 'bg-rose-50 border-rose-100 text-rose-500 hover:bg-rose-100'}`}
-                title="Excluir Turma Completa"
+                className={`border-2 p-2 rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-50 flex items-center gap-2 overflow-hidden ${confirmingDeleteClass === selectedClassId ? 'bg-rose-900 border-rose-700 text-white px-4' : 'bg-rose-950/50 border-rose-900/40 text-rose-400 hover:bg-rose-900/30'}`}
+                title="Dispensar Time"
               >
                 {isSaving && confirmingDeleteClass === selectedClassId ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -908,7 +972,7 @@ export default function App() {
                   <>
                     <Trash2 size={20} />
                     {confirmingDeleteClass === selectedClassId && (
-                      <span onClick={(e) => { e.stopPropagation(); deleteClass(selectedClassId); }} className="text-[10px] font-black uppercase whitespace-nowrap">Excluir Turma?</span>
+                      <span onClick={(e) => { e.stopPropagation(); deleteClass(selectedClassId); }} className="text-[10px] font-black uppercase whitespace-nowrap">Dispensar Time?</span>
                     )}
                   </>
                 )}
@@ -917,35 +981,35 @@ export default function App() {
           </div>
         </div>
       </header>
-
-      <main className="max-w-7xl mx-auto px-4 md:px-8 mt-8 flex flex-col gap-8">
+ 
+      <main className="max-w-7xl mx-auto px-4 md:px-8 mt-8 flex flex-col gap-8 relative z-10">
         
-        {/* TOP HONORS: AJUDANTES DO DIA */}
+        {/* TOP HONORS: CAPITÃES E CONVOCADOS DO DIA */}
         <section className="w-full">
-          <div className="bg-slate-900 rounded-[3rem] p-8 flex flex-col border-[12px] border-slate-800 shadow-2xl relative overflow-hidden text-white">
+          <div className="bg-gradient-to-b from-slate-900 to-emerald-950 rounded-[3rem] p-8 flex flex-col border-[12px] border-slate-800 shadow-3xl relative overflow-hidden text-white">
             {/* Background Decorative Elements */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-amber-500/5 blur-[80px] rounded-full translate-y-1/2 -translate-x-1/2" />
+            <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-80 h-80 bg-yellow-500/10 blur-[120px] rounded-full translate-y-1/2 -translate-x-1/2" />
             
             <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8 relative z-10">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-purple-600 rounded-2xl flex items-center justify-center shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-300 ring-4 ring-purple-500/30">
-                  <HandHelping size={32} className="text-white" />
+                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-2xl flex items-center justify-center shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-300 ring-4 ring-yellow-400/30">
+                  <Trophy size={32} className="text-slate-950" />
                 </div>
                 <div className="flex flex-col">
-                  <h2 className="text-purple-300 font-black text-3xl uppercase tracking-tighter italic leading-none">Ajudantes da Turma</h2>
-                  <p className="text-purple-400/60 text-xs font-black mt-2 uppercase tracking-widest italic">Os Destaques da Aula de Hoje</p>
+                  <h2 className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-400 font-black text-3xl uppercase tracking-tighter italic leading-none">CAPITÃES E AUXILIARES</h2>
+                  <p className="text-emerald-400 text-xs font-black mt-2 uppercase tracking-widest italic">Os Grandes Medalhistas e Líderes da Aula</p>
                 </div>
               </div>
               
-              <div className="flex items-center gap-3 bg-slate-800/50 px-6 py-3 rounded-2xl border border-slate-700/50 backdrop-blur-sm">
-                <div className="text-amber-400 animate-pulse">✨</div>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] italic">Ordem de Atividades</span>
-                <div className="text-amber-400 animate-pulse">✨</div>
+              <div className="flex items-center gap-3 bg-emerald-950/60 px-6 py-3 rounded-2xl border border-emerald-500/20 backdrop-blur-sm">
+                <div className="text-yellow-400 animate-pulse">🏆</div>
+                <span className="text-[10px] font-black text-emerald-300 uppercase tracking-[0.2em] italic">Ordem Tática / Atividades</span>
+                <div className="text-yellow-400 animate-pulse">🏆</div>
               </div>
             </div>
             
-            <div className="relative border-y-4 border-dashed border-slate-700/30 py-8 min-h-[220px] bg-slate-800/20 rounded-[2rem]">
+            <div className="relative border-y-4 border-dashed border-emerald-500/20 py-8 min-h-[220px] bg-slate-950/60 rounded-[2rem] shadow-inner">
               <div className="w-full overflow-x-auto pb-4 px-6 custom-scrollbar">
                 {selectedClassId === 'all' ? (
                   <div className="flex gap-12 items-start py-4">
@@ -953,8 +1017,8 @@ export default function App() {
                       const classHelpers = grouped.helper.filter(h => h.classId === cls.id);
                       if (classHelpers.length === 0) return null;
                       return (
-                        <div key={cls.id} className="flex flex-col gap-6 items-center shrink-0 min-w-[200px] border-r-2 border-dashed border-slate-700/50 last:border-r-0 pr-12 last:pr-0">
-                          <span className="bg-slate-700 px-4 py-1.5 rounded-full text-[10px] font-black text-slate-300 uppercase tracking-widest italic border border-slate-600 shadow-sm">{cls.name}</span>
+                        <div key={cls.id} className="flex flex-col gap-6 items-center shrink-0 min-w-[200px] border-r-2 border-dashed border-emerald-800 pr-12 last:pr-0">
+                          <span className="bg-emerald-900 border border-emerald-600 px-4 py-1.5 rounded-full text-[10px] font-black text-yellow-300 uppercase tracking-widest italic shadow-sm">{cls.name}</span>
                           <Reorder.Group axis="x" values={classHelpers} onReorder={handleReorder} className="flex gap-6 items-center">
                             <AnimatePresence mode="popLayout">
                               {classHelpers.map(s => (
@@ -1034,44 +1098,43 @@ export default function App() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* ACTION PANEL */}
           <div className="lg:col-span-12 flex flex-col gap-8">
-            
             {/* Add Student Form */}
             {selectedClassId !== 'all' ? (
-              <form onSubmit={addStudent} className="bg-white p-8 rounded-[3rem] border-4 border-sky-100 shadow-xl flex flex-col lg:flex-row gap-8 items-center relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-sky-50 rounded-full translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform duration-500" />
+              <form onSubmit={addStudent} className="bg-slate-900/80 p-8 rounded-[3rem] border-4 border-emerald-500/30 shadow-2xl flex flex-col lg:flex-row gap-8 items-center relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform duration-500" />
                 
                 <div className="flex-1 flex flex-col gap-3 w-full relative z-10">
-                  <div className="flex items-center gap-2 px-2">
-                    <UserPlus size={14} className="text-sky-400" />
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Novo Aluno na Sala:</label>
+                  <div className="flex items-center gap-2 px-2 text-yellow-400">
+                    <UserPlus size={16} />
+                    <label className="text-[10px] font-black uppercase tracking-widest text-emerald-300">Convocar Novo Craque para a Seleção:</label>
                   </div>
                   <input 
                     type="text" 
-                    placeholder="Ex: Ayrton Senna da Silva..." 
+                    placeholder="Ex: Neymar Jr. / Marta Vieira..." 
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
-                    className="w-full bg-slate-50 px-6 py-4 rounded-[1.5rem] border-2 border-slate-100 focus:border-sky-400 focus:bg-white outline-none text-base font-black shadow-inner transition-all"
+                    className="w-full bg-slate-950/80 text-white placeholder-slate-500 px-6 py-4 rounded-[1.5rem] border-2 border-emerald-500/20 focus:border-yellow-400 outline-none text-base font-black shadow-inner transition-all"
                   />
                 </div>
                 <div className="flex flex-col gap-3 relative z-10 shrink-0">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Cor do Carro:</label>
-                  <div className="p-3 bg-slate-50 rounded-[1.5rem] border border-slate-100">
+                  <label className="text-[10px] font-black text-emerald-300 uppercase tracking-widest text-center">Cor da Bandeira:</label>
+                  <div className="p-3 bg-slate-950/80 rounded-[1.5rem] border border-emerald-500/20">
                     <ColorPicker selected={newColor} onSelect={setNewColor} />
                   </div>
                 </div>
                 <button 
                   type="submit"
                   disabled={!newName.trim() || isSaving}
-                  className="bg-sky-500 hover:bg-sky-600 disabled:opacity-50 text-white px-10 py-5 rounded-[1.5rem] font-black shadow-lg hover:shadow-sky-200 transition-all active:scale-95 flex items-center gap-3 border-b-6 border-sky-700 self-stretch lg:self-end mt-4 lg:mt-0 relative z-10"
+                  className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 disabled:opacity-50 text-white px-10 py-5 rounded-[1.5rem] font-black shadow-lg hover:shadow-emerald-900/50 transition-all active:scale-95 flex items-center gap-3 border-b-6 border-emerald-700 self-stretch lg:self-end mt-4 lg:mt-0 relative z-10"
                 >
-                  <Plus size={28} strokeWidth={3} /> <span className="text-lg">ENTRAR NA SALA</span>
+                  <Plus size={28} strokeWidth={3} /> <span className="text-lg">CORES EM CAMPO! ⚽</span>
                 </button>
               </form>
             ) : (
-              <div className="bg-sky-100/50 p-8 rounded-[3rem] border-4 border-dashed border-sky-200 text-center flex flex-col items-center gap-4">
-                <Users size={32} className="text-sky-400" />
-                <p className="text-sky-600 font-black text-base uppercase italic tracking-[0.1em]">
-                  🚦 Selecione uma turma no cabeçalho para gerenciar os alunos!
+              <div className="bg-emerald-950/20 p-8 rounded-[3rem] border-4 border-dashed border-emerald-500/20 text-center flex flex-col items-center gap-4">
+                <Users size={32} className="text-yellow-400" />
+                <p className="text-emerald-400 font-black text-base uppercase italic tracking-[0.1em]">
+                  ⚽ Selecione uma turma ou time no cabeçalho para gerenciar os craques convocados!
                 </p>
               </div>
             )}
@@ -1079,18 +1142,19 @@ export default function App() {
             {/* BEHAVIOR ZONES (MAIN TRACKS) */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {/* GREEN ZONE */}
-              <div className="bg-emerald-100 rounded-[3rem] p-8 flex flex-col border-4 border-emerald-300 shadow-xl min-h-[600px] transition-transform hover:scale-[1.01] duration-300">
-                <div className="flex items-center justify-between mb-8">
+              <div className="bg-gradient-to-b from-emerald-950/60 via-slate-900/80 to-slate-950/90 rounded-[3rem] p-8 flex flex-col border-4 border-emerald-500 shadow-xl min-h-[600px] transition-transform hover:scale-[1.01] duration-300 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full pointer-events-none" />
+                <div className="flex items-center justify-between mb-8 relative z-10">
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-emerald-500 rounded-2xl border-4 border-white shadow-[0_8px_0_0_rgb(16,185,129)] flex items-center justify-center text-white font-black italic text-2xl">1️</div>
+                    <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl border-4 border-white shadow-[0_8px_0_0_rgb(16,185,129)] flex items-center justify-center text-white font-black italic text-2xl">🟢</div>
                     <div>
-                      <h2 className="font-black text-emerald-800 text-2xl uppercase italic tracking-tight leading-none">Pista Verde</h2>
-                      <p className="text-emerald-600/60 text-[10px] font-black mt-1 uppercase italic">Estudantes Exemplares</p>
+                      <h2 className="font-black text-emerald-400 text-2xl uppercase italic tracking-tight leading-none">TITULARES</h2>
+                      <p className="text-emerald-300/60 text-[10px] font-black mt-1 uppercase italic">Foco Total & Fair Play</p>
                     </div>
                   </div>
-                  <Check size={24} className="text-emerald-500 opacity-30" />
+                  <span className="text-2xl opacity-60">🏆</span>
                 </div>
-                <div className="grid grid-cols-2 gap-5 pb-8 flex-1 content-start">
+                <div className="grid grid-cols-2 gap-5 pb-8 flex-1 content-start relative z-10">
                   <AnimatePresence mode="popLayout">
                     {grouped.green.map(s => (
                       <StudentCar 
@@ -1103,25 +1167,26 @@ export default function App() {
                     ))}
                   </AnimatePresence>
                 </div>
-                <div className="mt-auto space-y-4">
-                  <div className="h-1 bg-emerald-200 w-full rounded-full opacity-50" />
-                  <p className="text-[11px] text-emerald-700 font-extrabold uppercase text-center py-3 bg-emerald-50 rounded-[1.5rem] border-2 border-emerald-200 tracking-tight shadow-sm">
-                    ✨ Estudantes com Comportamento Exemplar!
+                <div className="mt-auto space-y-4 relative z-10">
+                  <div className="h-1 bg-emerald-500/20 w-full rounded-full" />
+                  <p className="text-[11px] text-emerald-400 font-extrabold uppercase text-center py-3 bg-emerald-950/60 rounded-[1.5rem] border-2 border-emerald-500/30 tracking-tight shadow-sm">
+                    ⭐ Jogadores com conduta exemplar em campo!
                   </p>
                 </div>
               </div>
 
               {/* YELLOW ZONE */}
-              <div className="bg-amber-100 rounded-[3rem] p-8 flex flex-col border-4 border-amber-300 shadow-xl min-h-[600px] transition-transform hover:scale-[1.01] duration-300">
+              <div className="bg-gradient-to-b from-amber-950/60 via-slate-900/80 to-slate-950/90 rounded-[3rem] p-8 flex flex-col border-4 border-yellow-500 shadow-xl min-h-[600px] transition-transform hover:scale-[1.01] duration-300 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/5 rounded-full pointer-events-none" />
                 <div className="flex items-center justify-between mb-8">
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-amber-400 rounded-2xl border-4 border-white shadow-[0_8px_0_0_rgb(245,158,11)] flex items-center justify-center text-white font-black italic text-2xl">2️</div>
+                    <div className="w-14 h-14 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-2xl border-4 border-white shadow-[0_8px_0_0_rgb(245,158,11)] flex items-center justify-center text-slate-950 font-black italic text-2xl">🟨</div>
                     <div>
-                      <h2 className="font-black text-amber-800 text-2xl uppercase italic tracking-tight leading-none">Pista Amarela</h2>
-                      <p className="text-amber-600/60 text-[10px] font-black mt-1 uppercase italic">Moderar Velocidade</p>
+                      <h2 className="font-black text-yellow-400 text-2xl uppercase italic tracking-tight leading-none">RESERVAS</h2>
+                      <p className="text-yellow-300/60 text-[10px] font-black mt-1 uppercase italic">Atenção e Concentração</p>
                     </div>
                   </div>
-                  <AlertTriangle size={24} className="text-amber-500 opacity-30" />
+                  <span className="text-2xl opacity-60">⚠️</span>
                 </div>
                 <div className="grid grid-cols-2 gap-5 pb-8 flex-1 content-start">
                   <AnimatePresence mode="popLayout">
@@ -1137,24 +1202,25 @@ export default function App() {
                   </AnimatePresence>
                 </div>
                 <div className="mt-auto space-y-4">
-                  <div className="h-1 bg-amber-200 w-full rounded-full opacity-50" />
-                  <p className="text-[11px] text-amber-700 font-extrabold uppercase text-center py-3 bg-amber-50 rounded-[1.5rem] border-2 border-amber-200 tracking-tight shadow-sm">
-                    ⚠️ Atenção! Reduza a velocidade.
+                  <div className="h-1 bg-yellow-500/20 w-full rounded-full" />
+                  <p className="text-[11px] text-yellow-400 font-extrabold uppercase text-center py-3 bg-slate-900/60 rounded-[1.5rem] border-2 border-yellow-500/30 tracking-tight shadow-sm">
+                    🟨 Alerta! Foco no treino para voltar ao jogo.
                   </p>
                 </div>
               </div>
 
               {/* RED ZONE */}
-              <div className="bg-rose-100 rounded-[3rem] p-8 flex flex-col border-4 border-rose-300 shadow-xl min-h-[600px] transition-transform hover:scale-[1.01] duration-300">
+              <div className="bg-gradient-to-b from-rose-950/60 via-slate-900/80 to-slate-950/90 rounded-[3rem] p-8 flex flex-col border-4 border-rose-500 shadow-xl min-h-[600px] transition-transform hover:scale-[1.01] duration-300 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/5 rounded-full pointer-events-none" />
                 <div className="flex items-center justify-between mb-8">
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-rose-600 rounded-2xl border-4 border-white shadow-[0_8px_0_0_rgb(225,29,72)] flex items-center justify-center text-white font-black italic text-2xl">3️</div>
+                    <div className="w-14 h-14 bg-gradient-to-br from-rose-500 to-rose-600 rounded-2xl border-4 border-white shadow-[0_8px_0_0_rgb(225,29,72)] flex items-center justify-center text-white font-black italic text-2xl">🟥</div>
                     <div>
-                      <h2 className="font-black text-rose-800 text-2xl uppercase italic tracking-tight leading-none">Pista Vermelha</h2>
-                      <p className="text-rose-600/60 text-[10px] font-black mt-1 uppercase italic">Parada no Box</p>
+                      <h2 className="font-black text-rose-400 text-2xl uppercase italic tracking-tight leading-none">ÁREA TÉCNICA</h2>
+                      <p className="text-rose-300/60 text-[10px] font-black mt-1 uppercase italic">Recuperando Energia</p>
                     </div>
                   </div>
-                  <RotateCcw size={24} className="text-rose-500 opacity-30" />
+                  <span className="text-2xl opacity-60">🚨</span>
                 </div>
                 <div className="grid grid-cols-2 gap-5 pb-8 flex-1 content-start">
                   <AnimatePresence mode="popLayout">
@@ -1170,10 +1236,10 @@ export default function App() {
                   </AnimatePresence>
                 </div>
                 <div className="mt-auto space-y-4">
-                  <div className="h-1 bg-rose-200 w-full rounded-full opacity-50" />
-                  <div className="p-4 bg-rose-600 rounded-[1.5rem] border-b-6 border-rose-800 shadow-lg">
+                  <div className="h-1 bg-rose-500/20 w-full rounded-full" />
+                  <div className="p-4 bg-rose-700 rounded-[1.5rem] border-b-6 border-rose-900 shadow-lg">
                     <p className="text-[10px] text-white font-black uppercase text-center leading-tight">
-                      🚨 SAÍDA DE PISTA: Conversar no Box com a Coordenação!
+                      🚨 CARTÃO VERMELHO: Apresentar-se à Coordenação agora!
                     </p>
                   </div>
                 </div>
@@ -1406,7 +1472,7 @@ export default function App() {
               </p>
               <div className="bg-rose-50 p-6 rounded-[2rem] mb-10 border-2 border-rose-100">
                 <p className="text-lg font-black text-gray-800 leading-tight uppercase underline decoration-rose-300 decoration-4">
-                  Dirigir-se ao Box (Coordenação) agora!
+                  Apresentar-se à Coordenação agora!
                 </p>
               </div>
               <button 
