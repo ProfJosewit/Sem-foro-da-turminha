@@ -260,13 +260,19 @@ const StudentCar = ({
   onStatusChange, 
   onDelete,
   isSaving = false,
-  isSelected = false
+  isSelected = false,
+  isDraggingCurrently = false,
+  onDragStartCustom,
+  onDragEndCustom
 }: { 
   student: Student, 
   onStatusChange: (id: string, status: BehaviorStatus) => void,
   onDelete: (id: string) => void,
   isSaving?: boolean,
   isSelected?: boolean,
+  isDraggingCurrently?: boolean,
+  onDragStartCustom?: () => void,
+  onDragEndCustom?: () => void,
   key?: React.Key
 }) => {
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
@@ -297,8 +303,18 @@ const StudentCar = ({
       exit={{ scale: 0.8, opacity: 0 }}
       whileHover={{ y: -6, scale: 1.02 }}
       whileDrag={{ scale: 1.05, shadow: "0 25px 30px -5px rgb(0 0 0 / 0.5)", zIndex: 100 }}
-      className={`relative group flex flex-col items-center p-5 rounded-[2.5rem] shadow-xl border-t-2 border-x-2 border-b-[14px] ${getBorderColor()} ${getBgColor()} transition-all hover:shadow-2xl cursor-grab active:cursor-grabbing overflow-visible`}
+      className={`relative group flex flex-col items-center p-5 rounded-[2.5rem] shadow-xl border-t-2 border-x-2 border-b-[14px] ${getBorderColor()} ${getBgColor()} transition-all hover:shadow-2xl cursor-grab active:cursor-grabbing overflow-visible ${isOptionsOpen ? 'z-50 ring-4 ring-yellow-400 scale-105 shadow-2xl' : 'z-10 hover:z-20'} ${isDraggingCurrently ? 'opacity-30 scale-90 border-dashed border-yellow-400' : ''}`}
       onClick={() => setIsOptionsOpen(!isOptionsOpen)}
+      draggable
+      onDragStart={(e) => {
+        setIsOptionsOpen(false);
+        e.dataTransfer.setData("studentId", student.id);
+        e.dataTransfer.effectAllowed = "move";
+        if (onDragStartCustom) onDragStartCustom();
+      }}
+      onDragEnd={() => {
+        if (onDragEndCustom) onDragEndCustom();
+      }}
     >
       <RacingCar 
         color={student.status === 'helper' ? '#FFD700' : student.carColor} 
@@ -435,6 +451,8 @@ export default function App() {
   const [newClassSeries, setNewClassSeries] = useState('');
   const [showAlert, setShowAlert] = useState<{name: string} | null>(null);
   const [globalError, setGlobalError] = useState<string | null>(null);
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const [dragOverZone, setDragOverZone] = useState<'green' | 'yellow' | 'red' | 'helper' | null>(null);
 
   const [confirmingDeleteClass, setConfirmingDeleteClass] = useState<string | null>(null);
   const [confirmingDeleteAll, setConfirmingDeleteAll] = useState(false);
@@ -986,7 +1004,20 @@ export default function App() {
         
         {/* TOP HONORS: CAPITÃES E CONVOCADOS DO DIA */}
         <section className="w-full">
-          <div className="bg-gradient-to-b from-slate-900 to-emerald-950 rounded-[3rem] p-8 flex flex-col border-[12px] border-slate-800 shadow-3xl relative overflow-hidden text-white">
+          <div 
+            onDragOver={(e) => e.preventDefault()}
+            onDragEnter={() => setDragOverZone('helper')}
+            onDragLeave={() => setDragOverZone(null)}
+            onDrop={async (e) => {
+              e.preventDefault();
+              setDragOverZone(null);
+              const studentId = e.dataTransfer.getData("studentId");
+              if (studentId) {
+                await updateStatus(studentId, 'helper');
+              }
+            }}
+            className={`bg-gradient-to-b from-slate-900 to-emerald-950 rounded-[3rem] p-8 flex flex-col border-[12px] shadow-3xl relative overflow-hidden text-white transition-all duration-300 ${dragOverZone === 'helper' ? 'border-yellow-500 shadow-[0_0_40px_rgba(234,179,8,0.3)]' : 'border-slate-800'}`}
+          >
             {/* Background Decorative Elements */}
             <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
             <div className="absolute bottom-0 left-0 w-80 h-80 bg-yellow-500/10 blur-[120px] rounded-full translate-y-1/2 -translate-x-1/2" />
@@ -1035,6 +1066,9 @@ export default function App() {
                                     onDelete={deleteStudent} 
                                     isSaving={isSaving}
                                     isSelected 
+                                    isDraggingCurrently={activeDragId === s.id}
+                                    onDragStartCustom={() => setActiveDragId(s.id)}
+                                    onDragEndCustom={() => setActiveDragId(null)}
                                   />
                                 </Reorder.Item>
                               ))}
@@ -1061,6 +1095,9 @@ export default function App() {
                             onDelete={deleteStudent} 
                             isSaving={isSaving}
                             isSelected 
+                            isDraggingCurrently={activeDragId === s.id}
+                            onDragStartCustom={() => setActiveDragId(s.id)}
+                            onDragEndCustom={() => setActiveDragId(null)}
                           />
                         </Reorder.Item>
                       ))}
@@ -1142,7 +1179,20 @@ export default function App() {
             {/* BEHAVIOR ZONES (MAIN TRACKS) */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {/* GREEN ZONE */}
-              <div className="bg-gradient-to-b from-emerald-950/60 via-slate-900/80 to-slate-950/90 rounded-[3rem] p-8 flex flex-col border-4 border-emerald-500 shadow-xl min-h-[600px] transition-transform hover:scale-[1.01] duration-300 relative overflow-hidden group">
+              <div 
+                onDragOver={(e) => e.preventDefault()}
+                onDragEnter={() => setDragOverZone('green')}
+                onDragLeave={() => setDragOverZone(null)}
+                onDrop={async (e) => {
+                  e.preventDefault();
+                  setDragOverZone(null);
+                  const studentId = e.dataTransfer.getData("studentId");
+                  if (studentId) {
+                    await updateStatus(studentId, 'green');
+                  }
+                }}
+                className={`bg-gradient-to-b from-emerald-950/60 via-slate-900/80 to-slate-950/90 rounded-[3rem] p-8 flex flex-col border-4 shadow-xl min-h-[600px] transition-all duration-300 relative overflow-visible group ${dragOverZone === 'green' ? 'border-emerald-400 ring-4 ring-emerald-500/35 scale-[1.01] shadow-[0_0_35px_rgba(16,185,129,0.4)] bg-emerald-900/30' : 'border-emerald-500'}`}
+              >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full pointer-events-none" />
                 <div className="flex items-center justify-between mb-8 relative z-10">
                   <div className="flex items-center gap-4">
@@ -1163,6 +1213,9 @@ export default function App() {
                         onStatusChange={updateStatus} 
                         onDelete={deleteStudent} 
                         isSaving={isSaving}
+                        isDraggingCurrently={activeDragId === s.id}
+                        onDragStartCustom={() => setActiveDragId(s.id)}
+                        onDragEndCustom={() => setActiveDragId(null)}
                       />
                     ))}
                   </AnimatePresence>
@@ -1176,7 +1229,20 @@ export default function App() {
               </div>
 
               {/* YELLOW ZONE */}
-              <div className="bg-gradient-to-b from-amber-950/60 via-slate-900/80 to-slate-950/90 rounded-[3rem] p-8 flex flex-col border-4 border-yellow-500 shadow-xl min-h-[600px] transition-transform hover:scale-[1.01] duration-300 relative overflow-hidden">
+              <div 
+                onDragOver={(e) => e.preventDefault()}
+                onDragEnter={() => setDragOverZone('yellow')}
+                onDragLeave={() => setDragOverZone(null)}
+                onDrop={async (e) => {
+                  e.preventDefault();
+                  setDragOverZone(null);
+                  const studentId = e.dataTransfer.getData("studentId");
+                  if (studentId) {
+                    await updateStatus(studentId, 'yellow');
+                  }
+                }}
+                className={`bg-gradient-to-b from-amber-950/60 via-slate-900/80 to-slate-950/90 rounded-[3rem] p-8 flex flex-col border-4 shadow-xl min-h-[600px] transition-all duration-300 relative overflow-visible ${dragOverZone === 'yellow' ? 'border-yellow-400 ring-4 ring-yellow-500/35 scale-[1.01] shadow-[0_0_35px_rgba(245,158,11,0.4)] bg-amber-950/30' : 'border-yellow-500'}`}
+              >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/5 rounded-full pointer-events-none" />
                 <div className="flex items-center justify-between mb-8">
                   <div className="flex items-center gap-4">
@@ -1197,6 +1263,9 @@ export default function App() {
                         onStatusChange={updateStatus} 
                         onDelete={deleteStudent} 
                         isSaving={isSaving}
+                        isDraggingCurrently={activeDragId === s.id}
+                        onDragStartCustom={() => setActiveDragId(s.id)}
+                        onDragEndCustom={() => setActiveDragId(null)}
                       />
                     ))}
                   </AnimatePresence>
@@ -1210,7 +1279,20 @@ export default function App() {
               </div>
 
               {/* RED ZONE */}
-              <div className="bg-gradient-to-b from-rose-950/60 via-slate-900/80 to-slate-950/90 rounded-[3rem] p-8 flex flex-col border-4 border-rose-500 shadow-xl min-h-[600px] transition-transform hover:scale-[1.01] duration-300 relative overflow-hidden">
+              <div 
+                onDragOver={(e) => e.preventDefault()}
+                onDragEnter={() => setDragOverZone('red')}
+                onDragLeave={() => setDragOverZone(null)}
+                onDrop={async (e) => {
+                  e.preventDefault();
+                  setDragOverZone(null);
+                  const studentId = e.dataTransfer.getData("studentId");
+                  if (studentId) {
+                    await updateStatus(studentId, 'red');
+                  }
+                }}
+                className={`bg-gradient-to-b from-rose-950/60 via-slate-900/80 to-slate-950/90 rounded-[3rem] p-8 flex flex-col border-4 shadow-xl min-h-[600px] transition-all duration-300 relative overflow-visible ${dragOverZone === 'red' ? 'border-rose-400 ring-4 ring-rose-500/35 scale-[1.01] shadow-[0_0_35px_rgba(225,29,72,0.4)] bg-rose-950/30' : 'border-rose-500'}`}
+              >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/5 rounded-full pointer-events-none" />
                 <div className="flex items-center justify-between mb-8">
                   <div className="flex items-center gap-4">
@@ -1231,6 +1313,9 @@ export default function App() {
                         onStatusChange={updateStatus} 
                         onDelete={deleteStudent} 
                         isSaving={isSaving}
+                        isDraggingCurrently={activeDragId === s.id}
+                        onDragStartCustom={() => setActiveDragId(s.id)}
+                        onDragEndCustom={() => setActiveDragId(null)}
                       />
                     ))}
                   </AnimatePresence>
