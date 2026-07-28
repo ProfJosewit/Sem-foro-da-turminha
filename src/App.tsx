@@ -116,124 +116,125 @@ const CAR_COLORS = [
 
 // --- Components ---
 
-const RacingCar = ({ color = '#94a3b8', size = 32, className = "", showExhaust = false }: { color?: string, size?: number, className?: string, showExhaust?: boolean }) => {
-  const poleColor = color || '#94a3b8';
+const RacingCar = ({ color = '#ef4444', size = 52, className = "", showExhaust = false }: { color?: string, size?: number, className?: string, showExhaust?: boolean }) => {
+  const carColor = color || '#ef4444';
+  const colorId = carColor.replace('#', '');
+  
   return (
     <div 
-      className={`relative ${className}`} 
-      style={{ width: size, height: size * 0.8 }}
+      className={`relative flex items-center justify-center ${className}`} 
+      style={{ width: size * 1.35, height: size * 0.85 }}
     >
       <svg 
-        viewBox="0 0 100 80" 
+        viewBox="0 0 120 70" 
         fill="none" 
         xmlns="http://www.w3.org/2000/svg"
-        className="w-full h-full drop-shadow-2xl overflow-visible"
+        className="w-full h-full drop-shadow-xl overflow-visible"
       >
         <defs>
-          <linearGradient id="flag-green" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#00b046" />
-            <stop offset="100%" stopColor="#007a30" />
+          <linearGradient id={`car-body-${colorId}`} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.4" />
+            <stop offset="30%" stopColor={carColor} />
+            <stop offset="100%" stopColor="#0f172a" stopOpacity="0.75" />
           </linearGradient>
-          <linearGradient id="flag-yellow" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#ffee1a" />
-            <stop offset="100%" stopColor="#e5c100" />
+
+          <linearGradient id="wheel-rim" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#cbd5e1" />
+            <stop offset="50%" stopColor="#f8fafc" />
+            <stop offset="100%" stopColor="#334155" />
           </linearGradient>
-          <linearGradient id="flag-blue" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#2b50f6" />
-            <stop offset="100%" stopColor="#001c76" />
+
+          <linearGradient id="windshield-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.95" />
+            <stop offset="100%" stopColor="#0284c7" stopOpacity="0.95" />
           </linearGradient>
-          <linearGradient id={`pole-${poleColor.replace('#','')}`} x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={poleColor} />
-            <stop offset="30%" stopColor="#ffffff" stopOpacity="0.6" />
-            <stop offset="70%" stopColor={poleColor} />
-            <stop offset="100%" stopColor="black" stopOpacity="0.4" />
-          </linearGradient>
-          <filter id="shadow-effect" x="-10%" y="-10%" width="120%" height="120%">
-            <feDropShadow dx="1" dy="3" stdDeviation="1.5" floodOpacity="0.25" />
+
+          <filter id="car-shadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="5" stdDeviation="3.5" floodColor="#000000" floodOpacity="0.45" />
           </filter>
         </defs>
 
-        {/* Flagpole Base */}
-        <ellipse cx="20" cy="74" rx="12" ry="3.5" fill="rgba(0,0,0,0.15)" />
-        <path d="M12 74 L28 74 L25 77 L15 77 Z" fill="#64748b" />
+        {/* Car Shadow */}
+        <ellipse cx="60" cy="62" rx="52" ry="5.5" fill="#000000" opacity="0.4" filter="blur(2px)" />
 
-        {/* Flagpole with customizable team/class color */}
-        <rect x="18" y="6" width="4" height="68" rx="1" fill={`url(#pole-${poleColor.replace('#','')})`} />
-        <circle cx="20" cy="5" r="3" fill="#f1f5f9" stroke={poleColor} strokeWidth="1" />
+        <g filter="url(#car-shadow)">
+          {/* Exhaust Flame when fast */}
+          {showExhaust && (
+            <g className="animate-pulse">
+              <path d="M10 44 Q-4 42 -12 39 Q-20 46 -8 48 Z" fill="#f97316" opacity="0.85" />
+              <path d="M8 45 Q-2 44 -8 42 Q-14 46 -6 47 Z" fill="#facc15" opacity="0.95" />
+            </g>
+          )}
 
-        {/* Elegant colorful tassel hanging from the pole */}
-        <path d="M18 12 Q8 14 13 22 Q18 30 10 36" stroke={poleColor} strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.9" />
+          {/* Rear Spoiler / Wing */}
+          <path d="M12 28 L24 28 L22 36 L10 36 Z" fill="#1e293b" />
+          <path d="M8 26 L28 26 L26 30 L6 30 Z" fill={carColor} stroke="#ffffff" strokeWidth="0.8" />
 
-        {/* Waving Brazil Flag */}
-        <g filter="url(#shadow-effect)">
-          {/* Main Flag Canvas - Green fabric with waving bezier contour */}
+          {/* Main Body */}
           <path 
-            d="M22 12 
-               Q38 8, 54 12 
-               T86 12 
-               L86 48 
-               Q70 44, 54 48 
-               T22 48 Z" 
-            fill="url(#flag-green)" 
-            stroke="#00521c"
-            strokeWidth="1.5"
+            d="M 14 48 
+               C 12 40, 20 34, 32 34 
+               C 42 26, 62 24, 78 32 
+               C 92 36, 110 42, 114 48 
+               C 116 52, 108 55, 96 55 
+               L 18 55 
+               C 12 55, 12 50, 14 48 Z" 
+            fill={`url(#car-body-${colorId})`}
+            stroke="#ffffff"
+            strokeWidth="1.2"
           />
 
-          {/* Yellow Diamond */}
+          {/* White Racing Stripe */}
           <path 
-            d="M30 30 
-               Q38 20, 54 20
-               Q70 20, 78 30
-               Q70 40, 54 40
-               Q38 40, 30 30 Z" 
-            fill="url(#flag-yellow)" 
+            d="M 16 47 Q 55 33 111 49 L 109 52 Q 55 36 18 50 Z" 
+            fill="#ffffff" 
+            opacity="0.85" 
           />
 
-          {/* Central Blue Globe */}
-          <circle cx="54" cy="30" r="7.5" fill="url(#flag-blue)" />
-
-          {/* White arch (recursively mimicking ORDEM E PROGRESSO) */}
+          {/* Windshield */}
           <path 
-            d="M48 33 Q54 28 60 29" 
-            stroke="#ffffff" 
-            strokeWidth="1.2" 
-            strokeLinecap="round" 
-            fill="none" 
+            d="M 44 32 C 52 26, 68 26, 75 32 C 68 37, 50 37, 44 32 Z" 
+            fill="url(#windshield-grad)" 
+            stroke="#0284c7" 
+            strokeWidth="1" 
           />
-          
-          {/* Constellation stars */}
-          <circle cx="51" cy="34" r="0.4" fill="#ffffff" />
-          <circle cx="55" cy="33" r="0.4" fill="#ffffff" />
-          <circle cx="57" cy="32" r="0.4" fill="#ffffff" />
-          <circle cx="53" cy="31" r="0.4" fill="#ffffff" />
-          <circle cx="56" cy="35" r="0.3" fill="#ffffff" />
+
+          {/* Driver Helmet */}
+          <circle cx="56" cy="31" r="4.5" fill="#facc15" stroke="#000000" strokeWidth="0.8" />
+          <path d="M 55 30 L 59 30 L 58 32 L 55 32 Z" fill="#0f172a" />
+
+          {/* Headlight */}
+          <ellipse cx="111" cy="48" rx="2.5" ry="3" fill="#fef08a" />
+
+          {/* Rear Wheel */}
+          <g>
+            <circle cx="32" cy="54" r="10.5" fill="#0f172a" stroke="#334155" strokeWidth="2" />
+            <circle cx="32" cy="54" r="5.5" fill="url(#wheel-rim)" />
+            <circle cx="32" cy="54" r="2" fill="#0f172a" />
+          </g>
+
+          {/* Front Wheel */}
+          <g>
+            <circle cx="92" cy="54" r="10.5" fill="#0f172a" stroke="#334155" strokeWidth="2" />
+            <circle cx="92" cy="54" r="5.5" fill="url(#wheel-rim)" />
+            <circle cx="92" cy="54" r="2" fill="#0f172a" />
+          </g>
         </g>
       </svg>
 
-      {/* Flag Sparkles/Stars */}
+      {/* Speed sparkles */}
       {showExhaust && (
-        <div className="absolute -right-4 top-[20%] -translate-y-1/2 flex flex-col gap-1">
-          {[...Array(3)].map((_, i) => (
-            <motion.div 
-              key={i}
-              initial={{ scale: 0, opacity: 0.8 }}
-              animate={{ 
-                scale: [0.4, 1.2, 0], 
-                opacity: [1, 0.7, 0], 
-                x: [0, 20, 35],
-                y: [0, i * 4 - 4, i * 8 - 8]
-              }}
-              transition={{ 
-                duration: 1.2, 
-                repeat: Infinity, 
-                delay: i * 0.3,
-                ease: "easeOut"
-              }}
-              className="w-2 h-2 text-amber-400 font-bold select-none pointer-events-none"
-            >
-              ✨
-            </motion.div>
-          ))}
+        <div className="absolute -left-3 top-[25%] flex flex-col gap-1 pointer-events-none">
+          <motion.div 
+            animate={{ x: [-2, -10, -2], opacity: [0.2, 0.8, 0.2] }} 
+            transition={{ duration: 0.6, repeat: Infinity }}
+            className="w-4 h-0.5 bg-yellow-400 rounded-full"
+          />
+          <motion.div 
+            animate={{ x: [-4, -14, -4], opacity: [0.3, 0.9, 0.3] }} 
+            transition={{ duration: 0.5, repeat: Infinity, delay: 0.1 }}
+            className="w-6 h-0.5 bg-amber-400 rounded-full"
+          />
         </div>
       )}
     </div>
@@ -345,47 +346,47 @@ const StudentCar = ({
               onClick={(e) => e.stopPropagation()}
             >
               <span className="text-[10px] font-black text-yellow-400 uppercase tracking-widest italic border-b border-slate-800 pb-2 w-full text-center">
-                🏆 ALTERAR POSIÇÃO NO PÓDIO
+                🚦 ALTERAR PISTA DO SEMÁFORO
               </span>
 
-              {/* Champion Podium Selector */}
+              {/* Semáforo Tracks Selector */}
               <div className="flex items-end gap-3 justify-center h-28 px-1 pb-1">
-                {/* 2o Lugar - Reservas */}
+                {/* 2o Lugar - Pista Amarela */}
                 <div className="flex flex-col items-center">
-                  <span className="text-[8px] font-black text-amber-500 uppercase italic mb-0.5">2º Lugar</span>
+                  <span className="text-[8px] font-black text-amber-400 uppercase italic mb-0.5">Atenção</span>
                   <button 
-                    title="Mudar para Reservas" 
+                    title="Mudar para Pista Amarela" 
                     onClick={() => { onStatusChange(student.id, 'yellow'); setIsOptionsOpen(false); }} 
                     className="w-16 h-16 rounded-t-xl bg-gradient-to-b from-yellow-400 via-amber-500 to-amber-700 text-slate-950 font-extrabold flex flex-col items-center justify-between py-2 hover:scale-105 shadow-md transition-transform active:scale-95 border border-white/20"
                   >
-                    <span className="text-sm">🥈</span>
-                    <span className="text-[8px] uppercase tracking-tighter">RESERVA</span>
+                    <span className="text-base">🟨</span>
+                    <span className="text-[8px] uppercase tracking-tighter">AMARELA</span>
                   </button>
                 </div>
 
-                {/* 1o Lugar - Titulares */}
+                {/* 1o Lugar - Pista Verde */}
                 <div className="flex flex-col items-center">
-                  <span className="text-[9px] font-black text-yellow-400 uppercase italic mb-0.5 animate-pulse">1º Lugar</span>
+                  <span className="text-[9px] font-black text-emerald-400 uppercase italic mb-0.5 animate-pulse">Livre</span>
                   <button 
-                    title="Mudar para Titulares" 
+                    title="Mudar para Pista Verde" 
                     onClick={() => { onStatusChange(student.id, 'green'); setIsOptionsOpen(false); }} 
                     className="w-20 h-20 rounded-t-xl bg-gradient-to-b from-emerald-400 via-green-500 to-green-700 text-white font-extrabold flex flex-col items-center justify-between py-2 hover:scale-105 shadow-xl transition-transform active:scale-95 border-2 border-yellow-400"
                   >
-                    <span className="text-base">🥇</span>
-                    <span className="text-[9px] uppercase tracking-tighter">TITULAR</span>
+                    <span className="text-lg">🟩</span>
+                    <span className="text-[9px] uppercase tracking-tighter">VERDE</span>
                   </button>
                 </div>
 
-                {/* 3o Lugar - Área Técnica */}
+                {/* 3o Lugar - Pista Vermelha (Pit Stop) */}
                 <div className="flex flex-col items-center">
-                  <span className="text-[8px] font-black text-rose-400 uppercase italic mb-0.5">3º Lugar</span>
+                  <span className="text-[8px] font-black text-rose-400 uppercase italic mb-0.5">Pare</span>
                   <button 
-                    title="Mudar para Área Técnica" 
+                    title="Mudar para Pit Stop / Pista Vermelha" 
                     onClick={() => { onStatusChange(student.id, 'red'); setIsOptionsOpen(false); }} 
                     className="w-16.5 h-12 rounded-t-xl bg-gradient-to-b from-rose-500 via-red-600 to-red-800 text-white font-extrabold flex flex-col items-center justify-between py-1.5 hover:scale-105 shadow-md transition-transform active:scale-95 border border-white/25"
                   >
-                    <span className="text-xs">🥉</span>
-                    <span className="text-[8px] uppercase tracking-tighter">TÉCNICO</span>
+                    <span className="text-xs">🟥</span>
+                    <span className="text-[8px] uppercase tracking-tighter">VERMELHA</span>
                   </button>
                 </div>
               </div>
@@ -393,11 +394,11 @@ const StudentCar = ({
               {/* Extras and Actions */}
               <div className="flex items-center gap-2.5 w-full border-t border-slate-900 pt-3">
                 <button 
-                  title="Tornar Capitão do Time" 
+                  title="Tornar Ajudante / Piloto do Dia" 
                   onClick={() => { onStatusChange(student.id, 'helper'); setIsOptionsOpen(false); }} 
                   className="flex-1 h-9 px-3 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-[9px] font-black uppercase italic shadow-md transition-all active:scale-95 flex items-center justify-center gap-1.5"
                 >
-                  👑 CAPITÃO
+                  👑 AJUDANTE DO DIA
                 </button>
                 
                 <button 
@@ -863,7 +864,7 @@ export default function App() {
               className="flex flex-col items-center gap-3"
             >
               <h2 className="text-white font-black text-3xl uppercase italic tracking-[0.2em] drop-shadow-2xl flex items-center gap-3">
-                <span className="text-yellow-400">Pátria</span> Educadora
+                <span className="text-yellow-400">SEMÁFORO</span> DO COMPORTAMENTO 🚦
               </h2>
               <div className="flex gap-1.5 mt-1">
                  {[...Array(4)].map((_, i) => (
@@ -876,7 +877,7 @@ export default function App() {
                  ))}
               </div>
             </motion.div>
-            <p className="text-slate-400 font-bold text-xs uppercase tracking-[0.4em] mt-6 opacity-75">Hasteando as Atividades...</p>
+            <p className="text-slate-400 font-bold text-xs uppercase tracking-[0.4em] mt-6 opacity-75">Aqueçam os Motores... Carregando Pilotos! 🏎️</p>
           </div>
         </motion.div>
       </div>
@@ -885,15 +886,10 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-950 via-slate-900 to-black font-sans text-slate-100 pb-20 relative overflow-hidden">
-      {/* Stadium Pitch Lines Overlays */}
+      {/* Track Overlay Lines */}
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none select-none overflow-hidden">
-        {/* Field center circle */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full border-8 border-white" />
-        {/* Center line */}
         <div className="absolute top-1/2 left-0 right-0 h-2 bg-white -translate-y-1/2" />
-        {/* Penalty areas */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[200px] border-b-8 border-x-8 border-white" />
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[200px] border-t-8 border-x-8 border-white" />
       </div>
 
       {/* Header */}
@@ -901,7 +897,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-6">
           <div>
             <h1 className="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-green-400 to-sky-400 tracking-tighter flex items-center gap-3 italic">
-              <span className="text-3xl animate-bounce">⚽</span> COPA DO MUNDO DA TURMINHA
+              <span className="text-3xl animate-bounce">🚦</span> SEMÁFORO DO COMPORTAMENTO
             </h1>
             <div className="flex items-center gap-3 mt-2 flex-wrap">
               <select 
@@ -922,7 +918,7 @@ export default function App() {
                 onChange={(e) => setSelectedClassId(e.target.value)}
                 className="bg-emerald-950/80 px-3 py-1.5 rounded-xl border-2 border-emerald-500 outline-none text-xs font-black text-white cursor-pointer hover:bg-emerald-900 transition-colors shadow-sm"
               >
-                <option value="all">Escalar Turma: Todas</option>
+                <option value="all">Selecionar Turma: Todas</option>
                 {classes.filter(c => selectedSeries === 'all' || c.series === selectedSeries).map(c => (
                   <option key={c.id} value={c.id}>{c.name} {c.series ? `(${c.series})` : ''}</option>
                 ))}
@@ -930,7 +926,7 @@ export default function App() {
               <button 
                 onClick={() => setShowClassesModal(true)}
                 className="text-yellow-400 hover:text-yellow-500 hover:scale-110 transition-transform"
-                title="Editar Turmas / Times"
+                title="Editar Turmas"
               >
                 <Settings size={18} />
               </button>
@@ -940,7 +936,7 @@ export default function App() {
                   animate={{ opacity: 1 }}
                   className="text-[10px] font-black text-yellow-400 uppercase tracking-widest animate-pulse"
                 >
-                  Gravando tática...
+                  Sincronizando pista...
                 </motion.span>
               )}
               {globalError && (
@@ -957,32 +953,32 @@ export default function App() {
           
           <div className="flex flex-wrap items-center gap-4">
             <div className="bg-yellow-400/10 px-5 py-2 rounded-2xl border-2 border-yellow-500/50 hidden sm:flex items-center gap-2">
-              <span className="text-yellow-400 font-extrabold text-sm uppercase tracking-wider">Jogadores:</span>
+              <span className="text-yellow-400 font-extrabold text-sm uppercase tracking-wider">Pilotos:</span>
               <span className="text-white font-black text-lg">{currentStudents.length}</span>
             </div>
- 
+
             <button 
               onClick={() => setShowBulkAdd(true)}
               className="bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-slate-950 px-4 py-2 rounded-xl text-sm font-black flex items-center gap-2 shadow-lg transition-all active:scale-95 border-b-4 border-amber-800"
             >
-              <Upload size={18} />+ Convocar Turma
+              <Upload size={18} />+ Importar Pilotos
             </button>
- 
+
             <button 
               onClick={() => setConfirmingReset(!confirmingReset)}
               className={`border-2 p-2 rounded-xl transition-all shadow-sm active:scale-95 flex items-center gap-2 overflow-hidden ${confirmingReset ? 'bg-amber-500 border-amber-600 text-white px-4' : 'bg-slate-800/80 border-emerald-500/30 text-yellow-400 hover:bg-slate-700'}`}
-              title="Apito Final (Resetar Partida)"
+              title="Resetar Pistas"
             >
               <RotateCcw size={20} className={confirmingReset ? 'animate-spin' : ''} />
-              {confirmingReset && <span onClick={(e) => { e.stopPropagation(); resetAll(); }} className="text-[10px] font-black uppercase">Apito Inicial (Reset)?</span>}
+              {confirmingReset && <span onClick={(e) => { e.stopPropagation(); resetAll(); }} className="text-[10px] font-black uppercase">Resetar Pistas?</span>}
             </button>
- 
+
             {selectedClassId !== 'all' && (
               <button 
                 onClick={() => setConfirmingDeleteClass(confirmingDeleteClass === selectedClassId ? null : selectedClassId)}
                 disabled={isSaving}
                 className={`border-2 p-2 rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-50 flex items-center gap-2 overflow-hidden ${confirmingDeleteClass === selectedClassId ? 'bg-rose-900 border-rose-700 text-white px-4' : 'bg-rose-950/50 border-rose-900/40 text-rose-400 hover:bg-rose-900/30'}`}
-                title="Dispensar Time"
+                title="Dispensar Turma"
               >
                 {isSaving && confirmingDeleteClass === selectedClassId ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -990,7 +986,7 @@ export default function App() {
                   <>
                     <Trash2 size={20} />
                     {confirmingDeleteClass === selectedClassId && (
-                      <span onClick={(e) => { e.stopPropagation(); deleteClass(selectedClassId); }} className="text-[10px] font-black uppercase whitespace-nowrap">Dispensar Time?</span>
+                      <span onClick={(e) => { e.stopPropagation(); deleteClass(selectedClassId); }} className="text-[10px] font-black uppercase whitespace-nowrap">Dispensar Turma?</span>
                     )}
                   </>
                 )}
@@ -1028,14 +1024,14 @@ export default function App() {
                   <Trophy size={32} className="text-slate-950" />
                 </div>
                 <div className="flex flex-col">
-                  <h2 className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-400 font-black text-3xl uppercase tracking-tighter italic leading-none">CAPITÃES E AUXILIARES</h2>
-                  <p className="text-emerald-400 text-xs font-black mt-2 uppercase tracking-widest italic">Os Grandes Medalhistas e Líderes da Aula</p>
+                  <h2 className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-400 font-black text-3xl uppercase tracking-tighter italic leading-none">AJUDANTES DO DIA</h2>
+                  <p className="text-emerald-400 text-xs font-black mt-2 uppercase tracking-widest italic">Líderes de Corrida e Auxiliares da Aula</p>
                 </div>
               </div>
               
               <div className="flex items-center gap-3 bg-emerald-950/60 px-6 py-3 rounded-2xl border border-emerald-500/20 backdrop-blur-sm">
                 <div className="text-yellow-400 animate-pulse">🏆</div>
-                <span className="text-[10px] font-black text-emerald-300 uppercase tracking-[0.2em] italic">Ordem Tática / Atividades</span>
+                <span className="text-[10px] font-black text-emerald-300 uppercase tracking-[0.2em] italic">Pilotos Auxiliares</span>
                 <div className="text-yellow-400 animate-pulse">🏆</div>
               </div>
             </div>
@@ -1143,18 +1139,18 @@ export default function App() {
                 <div className="flex-1 flex flex-col gap-3 w-full relative z-10">
                   <div className="flex items-center gap-2 px-2 text-yellow-400">
                     <UserPlus size={16} />
-                    <label className="text-[10px] font-black uppercase tracking-widest text-emerald-300">Convocar Novo Craque para a Seleção:</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-emerald-300">Cadastrar Novo Piloto:</label>
                   </div>
                   <input 
                     type="text" 
-                    placeholder="Ex: Neymar Jr. / Marta Vieira..." 
+                    placeholder="Ex: Ayrton Senna / Sophia..." 
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
                     className="w-full bg-slate-950/80 text-white placeholder-slate-500 px-6 py-4 rounded-[1.5rem] border-2 border-emerald-500/20 focus:border-yellow-400 outline-none text-base font-black shadow-inner transition-all"
                   />
                 </div>
                 <div className="flex flex-col gap-3 relative z-10 shrink-0">
-                  <label className="text-[10px] font-black text-emerald-300 uppercase tracking-widest text-center">Cor da Bandeira:</label>
+                  <label className="text-[10px] font-black text-emerald-300 uppercase tracking-widest text-center">Cor do Carrinho:</label>
                   <div className="p-3 bg-slate-950/80 rounded-[1.5rem] border border-emerald-500/20">
                     <ColorPicker selected={newColor} onSelect={setNewColor} />
                   </div>
@@ -1164,14 +1160,14 @@ export default function App() {
                   disabled={!newName.trim() || isSaving}
                   className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 disabled:opacity-50 text-white px-10 py-5 rounded-[1.5rem] font-black shadow-lg hover:shadow-emerald-900/50 transition-all active:scale-95 flex items-center gap-3 border-b-6 border-emerald-700 self-stretch lg:self-end mt-4 lg:mt-0 relative z-10"
                 >
-                  <Plus size={28} strokeWidth={3} /> <span className="text-lg">CORES EM CAMPO! ⚽</span>
+                  <Plus size={28} strokeWidth={3} /> <span className="text-lg">ACELERAR PARA A PISTA! 🏎️</span>
                 </button>
               </form>
             ) : (
               <div className="bg-emerald-950/20 p-8 rounded-[3rem] border-4 border-dashed border-emerald-500/20 text-center flex flex-col items-center gap-4">
                 <Users size={32} className="text-yellow-400" />
                 <p className="text-emerald-400 font-black text-base uppercase italic tracking-[0.1em]">
-                  ⚽ Selecione uma turma ou time no cabeçalho para gerenciar os craques convocados!
+                  🏎️ Selecione uma turma no cabeçalho para gerenciar os pilotos da corrida!
                 </p>
               </div>
             )}
@@ -1198,11 +1194,11 @@ export default function App() {
                   <div className="flex items-center gap-4">
                     <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl border-4 border-white shadow-[0_8px_0_0_rgb(16,185,129)] flex items-center justify-center text-white font-black italic text-2xl">🟢</div>
                     <div>
-                      <h2 className="font-black text-emerald-400 text-2xl uppercase italic tracking-tight leading-none">TITULARES</h2>
-                      <p className="text-emerald-300/60 text-[10px] font-black mt-1 uppercase italic">Foco Total & Fair Play</p>
+                      <h2 className="font-black text-emerald-400 text-2xl uppercase italic tracking-tight leading-none">PISTA VERDE</h2>
+                      <p className="text-emerald-300/60 text-[10px] font-black mt-1 uppercase italic">Sinal Livre & Foco Total</p>
                     </div>
                   </div>
-                  <span className="text-2xl opacity-60">🏆</span>
+                  <span className="text-2xl opacity-60">🏁</span>
                 </div>
                 <div className="grid grid-cols-2 gap-5 pb-8 flex-1 content-start relative z-10">
                   <AnimatePresence mode="popLayout">
@@ -1223,7 +1219,7 @@ export default function App() {
                 <div className="mt-auto space-y-4 relative z-10">
                   <div className="h-1 bg-emerald-500/20 w-full rounded-full" />
                   <p className="text-[11px] text-emerald-400 font-extrabold uppercase text-center py-3 bg-emerald-950/60 rounded-[1.5rem] border-2 border-emerald-500/30 tracking-tight shadow-sm">
-                    ⭐ Jogadores com conduta exemplar em campo!
+                    ⭐ Pilotos com conduta nota 10 e velocidade permitida!
                   </p>
                 </div>
               </div>
@@ -1248,8 +1244,8 @@ export default function App() {
                   <div className="flex items-center gap-4">
                     <div className="w-14 h-14 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-2xl border-4 border-white shadow-[0_8px_0_0_rgb(245,158,11)] flex items-center justify-center text-slate-950 font-black italic text-2xl">🟨</div>
                     <div>
-                      <h2 className="font-black text-yellow-400 text-2xl uppercase italic tracking-tight leading-none">RESERVAS</h2>
-                      <p className="text-yellow-300/60 text-[10px] font-black mt-1 uppercase italic">Atenção e Concentração</p>
+                      <h2 className="font-black text-yellow-400 text-2xl uppercase italic tracking-tight leading-none">PISTA AMARELA</h2>
+                      <p className="text-yellow-300/60 text-[10px] font-black mt-1 uppercase italic">Reduzir Velocidade & Atenção</p>
                     </div>
                   </div>
                   <span className="text-2xl opacity-60">⚠️</span>
@@ -1273,7 +1269,7 @@ export default function App() {
                 <div className="mt-auto space-y-4">
                   <div className="h-1 bg-yellow-500/20 w-full rounded-full" />
                   <p className="text-[11px] text-yellow-400 font-extrabold uppercase text-center py-3 bg-slate-900/60 rounded-[1.5rem] border-2 border-yellow-500/30 tracking-tight shadow-sm">
-                    🟨 Alerta! Foco no treino para voltar ao jogo.
+                    🟨 Alerta do Semáforo! Muita atenção às regras da pista.
                   </p>
                 </div>
               </div>
@@ -1298,8 +1294,8 @@ export default function App() {
                   <div className="flex items-center gap-4">
                     <div className="w-14 h-14 bg-gradient-to-br from-rose-500 to-rose-600 rounded-2xl border-4 border-white shadow-[0_8px_0_0_rgb(225,29,72)] flex items-center justify-center text-white font-black italic text-2xl">🟥</div>
                     <div>
-                      <h2 className="font-black text-rose-400 text-2xl uppercase italic tracking-tight leading-none">ÁREA TÉCNICA</h2>
-                      <p className="text-rose-300/60 text-[10px] font-black mt-1 uppercase italic">Recuperando Energia</p>
+                      <h2 className="font-black text-rose-400 text-2xl uppercase italic tracking-tight leading-none">PISTA VERMELHA</h2>
+                      <p className="text-rose-300/60 text-[10px] font-black mt-1 uppercase italic">Parada Obrigatória / Pit Stop</p>
                     </div>
                   </div>
                   <span className="text-2xl opacity-60">🚨</span>
@@ -1324,7 +1320,7 @@ export default function App() {
                   <div className="h-1 bg-rose-500/20 w-full rounded-full" />
                   <div className="p-4 bg-rose-700 rounded-[1.5rem] border-b-6 border-rose-900 shadow-lg">
                     <p className="text-[10px] text-white font-black uppercase text-center leading-tight">
-                      🚨 CARTÃO VERMELHO: Apresentar-se à Coordenação agora!
+                      🚨 SINAL VERMELHO: Dirija-se à Coordenação para alinhar os motores!
                     </p>
                   </div>
                 </div>
